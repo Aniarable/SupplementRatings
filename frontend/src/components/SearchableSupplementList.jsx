@@ -24,7 +24,8 @@ import {
     Divider,
     Avatar,
     Chip,
-    InputAdornment
+    InputAdornment,
+    Link as MuiLink
 } from '@mui/material';
 import { getSupplements, getSupplement, getConditions, getBrands, addRating, updateRating, upvoteRating, getCategories } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -1445,6 +1446,12 @@ function SearchableSupplementList() {
                 <Typography variant="body2" color="text.secondary">
                     Search and filter by purpose, category, brand, dosage, and more.
                 </Typography>
+                {!isAuthenticated && (
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                        Want to share your experience?{' '}
+                        <MuiLink component={RouterLink} to="/login" underline="hover">Log in</MuiLink> to write reviews.
+                    </Typography>
+                )}
             </Box>
             <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
                 <TextField
