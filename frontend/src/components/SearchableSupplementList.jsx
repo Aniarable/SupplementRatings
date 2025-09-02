@@ -1444,7 +1444,7 @@ function SearchableSupplementList() {
             >
                 <Typography variant="h4" sx={{ mb: 0.5 }}>Discover supplements</Typography>
                 <Typography variant="body2" color="text.secondary">
-                    Search and filter by purpose, category, brand, dosage, and more.
+                    Search and filter by benefits, purpose, category, and more.
                 </Typography>
                 {!isAuthenticated && (
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
