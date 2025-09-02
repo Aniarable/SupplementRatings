@@ -44,6 +44,12 @@ function Login() {
     const initGoogle = async () => {
       if (!(window.google && googleButtonRef.current)) return;
       try {
+        // Avoid noisy GSI errors during local development unless explicitly enabled
+        const enableLocalGsi = String(import.meta.env.VITE_ENABLE_GSI_LOCAL || '').toLowerCase() === 'true';
+        const isLocalhost = /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+        if (isLocalhost && !enableLocalGsi) {
+          return;
+        }
         // Prefer server-provided client ID; fall back to env if present
         const serverClientId = await fetchGoogleClientId();
         const clientId = serverClientId || import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -60,9 +66,6 @@ function Login() {
         }
         if (typeof window.google?.accounts?.id?.disableAutoSelect === 'function') {
           try { window.google.accounts.id.disableAutoSelect(); } catch (e) {}
-        }
-        if (typeof window.google?.accounts?.id?.setLogLevel === 'function') {
-          try { window.google.accounts.id.setLogLevel('error'); } catch (e) {}
         }
         window.google.accounts.id.initialize({
           client_id: clientId,
