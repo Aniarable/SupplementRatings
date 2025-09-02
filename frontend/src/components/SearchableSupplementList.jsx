@@ -1449,7 +1449,8 @@ function SearchableSupplementList() {
                 {!isAuthenticated && (
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
                         Want to share your experience?{' '}
-                        <MuiLink component={RouterLink} to="/login" underline="hover">Log in</MuiLink> to write reviews.
+                        <MuiLink component={RouterLink} to="/login" underline="hover">Log in</MuiLink>{' '}or{' '}
+                        <MuiLink component={RouterLink} to="/signup" underline="hover">sign up</MuiLink>{' '}to write reviews.
                     </Typography>
                 )}
             </Box>
