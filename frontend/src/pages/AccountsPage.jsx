@@ -15,7 +15,7 @@ import {
     Chip,
     Button,
     Avatar,
-    Snackbar,
+
     Autocomplete,
     TextField as MuiTextField,
     Rating as MuiRating,
@@ -29,7 +29,7 @@ import {
 } from '@mui/material';
 import { format } from 'date-fns';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import API, { updateProfileImage as updateProfileImageAPI, getAllConditions, updateUserChronicConditions as updateUserChronicConditionsAPI, deleteMyRating, updateComment as updateCommentAPI, deleteComment as deleteCommentAPI } from '../services/api';
+import API, { updateProfileImage as updateProfileImageAPI, getAllConditions, updateUserChronicConditions as updateUserChronicConditionsAPI, deleteMyRating, updateComment as updateCommentAPI, deleteComment as deleteCommentAPI, invalidateCache } from '../services/api';
 import { styled } from '@mui/material/styles';
 import { DEFAULT_PROFILE_IMAGE_URL } from '../config';
 import { toast } from 'react-toastify';
@@ -58,6 +58,8 @@ function AccountsPage() {
 
     const [allConditions, setAllConditions] = useState([]);
     const [selectedConditions, setSelectedConditions] = useState([]);
+    const [savedConditions, setSavedConditions] = useState([]); // confirmed-saved snapshot
+    const [conditionsDirty, setConditionsDirty] = useState(false); // unsaved changes pending
     const [loadingAllConditions, setLoadingAllConditions] = useState(true);
     const [conditionsError, setConditionsError] = useState(null);
     const [savingConditions, setSavingConditions] = useState(false);
@@ -72,8 +74,9 @@ function AccountsPage() {
     const [showDeleteCommentDialog, setShowDeleteCommentDialog] = useState(false);
 
     const fetchRatings = useCallback(async (url, isInitialLoad = true) => {
-        if (!user) {
-            setRatingsError("User not found. Please log in.");
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setRatingsError("Not logged in.");
             if (isInitialLoad) setLoadingRatings(false);
             return;
         }
@@ -85,7 +88,6 @@ function AccountsPage() {
         setRatingsError(null);
 
         try {
-            const token = localStorage.getItem('token');
             const response = await fetch(url, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -112,40 +114,29 @@ function AccountsPage() {
             setLoadingMore(false);
             if (isInitialLoad) setRatingsInitialLoaded(true);
         }
-    }, [user]);
+    }, []); // stable — uses token from localStorage, not user state
 
-    const fetchInitialData = useCallback(async (isInitialLoad = true) => {
-        if (user) {
-            fetchRatings('/api/ratings/my_ratings/', isInitialLoad);
-            try {
-                const response = await API.get('/user/me/');
-                updateUser(response.data);
-            } catch (error) {
-                console.error("Failed to refetch user details:", error);
-            }
-        }
-    }, [user, fetchRatings, updateUser]);
-
+    // Stable fetch: runs once on mount, not re-created when user state changes
+    const fetchInitialData = useCallback(async () => {
+        fetchRatings('/api/ratings/my_ratings/', true);
+    }, [fetchRatings]);
 
     useEffect(() => {
-        fetchInitialData(true);
+        fetchInitialData();
     }, [fetchInitialData]);
 
     useEffect(() => {
-        const lastFocusRef = { current: 0 };
-        const handleFocus = async () => {
-            if (!user) return;
+        const lastFetchRef = { current: 0 };
+        const handleFocus = () => {
             const now = Date.now();
-            // Throttle focus refetches to once every 10s and do a silent refresh
-            if (now - lastFocusRef.current > 10000) {
-                lastFocusRef.current = now;
-                fetchInitialData(false);
+            if (now - lastFetchRef.current > 30000) {
+                lastFetchRef.current = now;
+                fetchRatings('/api/ratings/my_ratings/', false);
             }
         };
-
         window.addEventListener('focus', handleFocus);
         return () => window.removeEventListener('focus', handleFocus);
-    }, [user, fetchInitialData]);
+    }, [fetchRatings]);
 
 
     useEffect(() => {
@@ -165,12 +156,21 @@ function AccountsPage() {
         fetchAllConditions();
     }, []);
 
+    // Sync selectedConditions and savedConditions from user data when either changes.
+    // Only runs when user.chronic_conditions or allConditions changes — not on every
+    // user state update — so saving won't overwrite an in-progress edit.
+    const prevSavedIdsRef = useRef(null);
     useEffect(() => {
-        if (user && user.chronic_conditions && allConditions.length > 0) {
-            const userConditionIds = user.chronic_conditions.map(c => c.id);
-            setSelectedConditions(allConditions.filter(c => userConditionIds.includes(c.id)));
-        }
-    }, [user, allConditions]);
+        if (!allConditions.length) return;
+        const ids = (user?.chronic_conditions ?? []).map(c => c.id);
+        const idsKey = ids.slice().sort().join(',');
+        if (idsKey === prevSavedIdsRef.current) return; // nothing changed
+        prevSavedIdsRef.current = idsKey;
+        const matched = allConditions.filter(c => ids.includes(c.id));
+        setSavedConditions(matched);
+        setSelectedConditions(matched);
+        setConditionsDirty(false);
+    }, [user?.chronic_conditions, allConditions]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleLoadMore = () => {
         if (nextPage) {
@@ -213,7 +213,12 @@ function AccountsPage() {
         const conditionIds = selectedConditions.map(c => c.id);
         try {
             const updatedConditionsData = await updateUserChronicConditionsAPI(conditionIds);
+            invalidateCache('user_me');
+            // Update both the user context and the local saved snapshot
+            prevSavedIdsRef.current = conditionIds.slice().sort().join(',');
             updateUser({ chronic_conditions: updatedConditionsData });
+            setSavedConditions(selectedConditions);
+            setConditionsDirty(false);
             setSaveConditionsSuccess(true);
             toast.success("Chronic conditions saved!");
         } catch (err) {
@@ -366,17 +371,39 @@ function AccountsPage() {
 
                 <Box sx={{ mt: 4, mb: 3, p: 2, border: '1px solid #eee', borderRadius: '4px' }}>
                     <Typography variant="h5" component="h2" gutterBottom>
-                        Manage Your Chronic Conditions
+                        My Chronic Conditions
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        Optionally, list any chronic conditions you manage. If you add conditions here, 
-                        you'll see a quick-add option ("Use My Saved Chronic Conditions") when rating supplements, 
-                        which will automatically include them as intended purposes for using the supplement.
-                    </Typography>
+                    {/* Saved conditions display */}
+                    <Box sx={{ mb: 2 }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                            Currently saved to your profile:
+                        </Typography>
+                        {savedConditions.length === 0 ? (
+                            <Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic' }}>
+                                None saved yet
+                            </Typography>
+                        ) : (
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                                {savedConditions.map(c => (
+                                    <Chip
+                                        key={c.id}
+                                        label={c.name}
+                                        size="small"
+                                        color="success"
+                                        variant="outlined"
+                                    />
+                                ))}
+                            </Box>
+                        )}
+                    </Box>
+
+                    <Divider sx={{ mb: 2 }} />
+
+                    {/* Edit section */}
                     {loadingAllConditions ? (
                         <CircularProgress size={24} />
                     ) : conditionsError && !allConditions.length ? (
-                         <Alert severity="error">{conditionsError}</Alert>
+                        <Alert severity="error">{conditionsError}</Alert>
                     ) : (
                         <Autocomplete
                             multiple
@@ -384,37 +411,49 @@ function AccountsPage() {
                             options={allConditions}
                             getOptionLabel={(option) => option.name}
                             value={selectedConditions}
-                            onChange={(event, newValue) => {
+                            onChange={(_, newValue) => {
                                 setSelectedConditions(newValue);
+                                setConditionsDirty(true);
+                                setSaveConditionsSuccess(false);
                             }}
                             isOptionEqualToValue={(option, value) => option.id === value.id}
                             renderInput={(params) => (
                                 <MuiTextField
                                     {...params}
                                     variant="outlined"
-                                    label="Select Chronic Conditions"
-                                    placeholder="Type to search conditions..."
+                                    label={conditionsDirty ? "Edited — click Save to update" : "Add or remove conditions"}
+                                    placeholder="Type to search..."
+                                    color={conditionsDirty ? "warning" : "primary"}
+                                    focused={conditionsDirty}
                                 />
                             )}
                             sx={{ mb: 2 }}
                         />
                     )}
-                    {conditionsError && allConditions.length > 0 && <Alert severity="error" sx={{mb:2}}>{conditionsError}</Alert>}
-                    <Button 
-                        variant="contained" 
-                        onClick={handleSaveChronicConditions} 
-                        disabled={loadingAllConditions || savingConditions}
-                    >
-                        {savingConditions ? <CircularProgress size={24} /> : 'Save Chronic Conditions'}
-                    </Button>
+                    {conditionsError && allConditions.length > 0 && (
+                        <Alert severity="error" sx={{ mb: 2 }}>{conditionsError}</Alert>
+                    )}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Button
+                            variant="contained"
+                            onClick={handleSaveChronicConditions}
+                            disabled={loadingAllConditions || savingConditions || !conditionsDirty}
+                            color={conditionsDirty ? "warning" : "primary"}
+                        >
+                            {savingConditions ? <CircularProgress size={20} /> : 'Save Changes'}
+                        </Button>
+                        {saveConditionsSuccess && !conditionsDirty && (
+                            <Typography variant="body2" color="success.main" sx={{ fontWeight: 500 }}>
+                                ✓ Saved
+                            </Typography>
+                        )}
+                        {conditionsDirty && (
+                            <Typography variant="body2" color="warning.main">
+                                Unsaved changes
+                            </Typography>
+                        )}
+                    </Box>
                 </Box>
-
-                <Snackbar
-                    open={saveConditionsSuccess}
-                    autoHideDuration={4000}
-                    onClose={() => setSaveConditionsSuccess(false)}
-                    message={"Chronic conditions saved!"}
-                />
 
                 <Typography variant="h5" component="h2" sx={{ mt: 4, mb: 2, borderBottom: '1px solid #ddd', pb: 1 }}>
                     My Ratings & Reviews

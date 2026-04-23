@@ -1,9 +1,17 @@
 // frontend/src/pages/Signup.jsx
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Container, Box, TextField, Button, Typography, Paper, InputAdornment, IconButton } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import { useNavigate, Link } from 'react-router-dom';
+import {
+  Box,
+  Button,
+  IconButton,
+  InputAdornment,
+  TextField,
+  Typography,
+} from '@mui/material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { registerUser } from '../services/api';
 import { toast } from 'react-toastify';
 
@@ -22,32 +30,26 @@ function Signup() {
       await registerUser({ username, email, password });
       toast.success(
         <span>
-          Registration successful! <strong>Please check your email to verify your account.</strong>
+          Registration successful!{' '}
+          <strong>Please check your email to verify your account.</strong>
         </span>
       );
       navigate('/login');
     } catch (error) {
-      console.error('Registration error:', error);
-      
-      let errorMessage = error.message || 'Registration failed'; // Use message from interceptor as a good default
+      let errorMessage = error.message || 'Registration failed';
 
-      // Check for specific username conflict within error.data for a more tailored message
-      if (error.data?.username && Array.isArray(error.data.username) && error.data.username.length > 0) {
-        const usernameError = error.data.username[0];
-        if (usernameError.toLowerCase().includes('already exists')) {
-          errorMessage = 'Username already exists. Please choose a different one.';
-        } else {
-          errorMessage = usernameError; 
-        }
-      } else if (error.data?.email && Array.isArray(error.data.email) && error.data.email.length > 0) {
-        const emailError = error.data.email[0];
-        if (emailError.toLowerCase().includes('already exists') || emailError.toLowerCase().includes('email already exists')) {
-          errorMessage = 'This email is already registered. Please use a different email or try logging in.';
-        } else {
-          errorMessage = emailError;
-        }
+      if (error.data?.username?.length) {
+        const msg = error.data.username[0];
+        errorMessage = msg.toLowerCase().includes('already exists')
+          ? 'Username already taken. Please choose a different one.'
+          : msg;
+      } else if (error.data?.email?.length) {
+        const msg = error.data.email[0];
+        errorMessage =
+          msg.toLowerCase().includes('already exists') || msg.toLowerCase().includes('email already')
+            ? 'This email is already registered. Try logging in instead.'
+            : msg;
       }
-      // No need for error.response?.data?.error as error.data is the source now and error.message covers general cases.
 
       toast.error(errorMessage);
     } finally {
@@ -55,20 +57,70 @@ function Signup() {
     }
   };
 
-  const handleClickShowPassword = () => setShowPassword(!showPassword);
-
-  const handleMouseDownPassword = (event) => {
-    event.preventDefault();
-  };
-
   return (
-    <Container maxWidth="sm">
-      <Box sx={{ mt: 8, mb: 4 }}>
-        <Paper elevation={3} sx={{ p: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom align="center">
-            Sign Up
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        bgcolor: 'background.default',
+      }}
+    >
+      {/* Left branding panel — desktop only */}
+      <Box
+        sx={{
+          display: { xs: 'none', md: 'flex' },
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '45%',
+          background: 'linear-gradient(145deg, #1565C0 0%, #1E88E5 60%, #64B5F6 100%)',
+          px: 6,
+          color: '#fff',
+        }}
+      >
+        <Box
+          component="img"
+          src="/Supplement_Ratings_Logo.png"
+          alt="Supplement Ratings"
+          sx={{ height: 64, width: 'auto', mb: 4, filter: 'brightness(0) invert(1)' }}
+        />
+        <Typography variant="h3" fontWeight={700} textAlign="center" gutterBottom>
+          Join the community
+        </Typography>
+        <Typography variant="body1" textAlign="center" sx={{ opacity: 0.85, maxWidth: 340, lineHeight: 1.7 }}>
+          Share your supplement experiences and help others make informed decisions about their health.
+        </Typography>
+      </Box>
+
+      {/* Right form panel */}
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          px: { xs: 3, sm: 6 },
+          py: 6,
+        }}
+      >
+        {/* Mobile logo */}
+        <Box
+          component="img"
+          src="/Supplement_Ratings_Logo.png"
+          alt="Supplement Ratings"
+          sx={{ height: 48, width: 'auto', mb: 3, display: { xs: 'block', md: 'none' } }}
+        />
+
+        <Box sx={{ width: '100%', maxWidth: 400 }}>
+          <Typography variant="h4" fontWeight={700} gutterBottom>
+            Create your account
           </Typography>
-          <form onSubmit={handleSubmit}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            It's free and takes less than a minute
+          </Typography>
+
+          <Box component="form" onSubmit={handleSubmit} noValidate>
             <TextField
               fullWidth
               label="Username"
@@ -78,10 +130,12 @@ function Signup() {
               onChange={(e) => setUsername(e.target.value)}
               required
               disabled={loading}
+              autoComplete="username"
+              autoFocus
             />
             <TextField
               fullWidth
-              label="Email"
+              label="Email address"
               type="email"
               variant="outlined"
               margin="normal"
@@ -89,6 +143,7 @@ function Signup() {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={loading}
+              autoComplete="email"
             />
             <TextField
               fullWidth
@@ -100,13 +155,13 @@ function Signup() {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={loading}
+              autoComplete="new-password"
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
                       aria-label="toggle password visibility"
-                      onClick={handleClickShowPassword}
-                      onMouseDown={handleMouseDownPassword}
+                      onClick={() => setShowPassword((v) => !v)}
                       edge="end"
                       disabled={loading}
                     >
@@ -116,21 +171,41 @@ function Signup() {
                 ),
               }}
             />
+
             <Button
               type="submit"
               fullWidth
               variant="contained"
-              color="primary"
               size="large"
-              sx={{ mt: 3, mb: 2 }}
               disabled={loading}
+              sx={{ mt: 3, py: 1.4, fontSize: '1rem' }}
             >
-              {loading ? 'Creating Account...' : 'Sign Up'}
+              {loading ? 'Creating account...' : 'Create account'}
             </Button>
-          </form>
-        </Paper>
+          </Box>
+
+          {/* Login link */}
+          <Box sx={{ mt: 4, textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              Already have an account?{' '}
+              <Typography
+                component={Link}
+                to="/login"
+                variant="body2"
+                sx={{
+                  color: 'primary.main',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  '&:hover': { textDecoration: 'underline' },
+                }}
+              >
+                Sign in
+              </Typography>
+            </Typography>
+          </Box>
+        </Box>
       </Box>
-    </Container>
+    </Box>
   );
 }
 

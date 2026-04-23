@@ -105,22 +105,21 @@ function Navbar() {
                             <Box component="img" src="/Supplement_Ratings_Logo.png" alt="Supplement Ratings" sx={{ height: 32, width: 'auto' }} />
                         </IconButton>
                     </Box>
-                    {/* Mobile Supplements Button */}
+                    {/* Mobile Feed Button */}
                     <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' }, justifyContent: 'flex-start', ml: 2 }}>
-                        <Button 
-                            color="inherit" 
-                            component={Link} 
-                            to="/supplements" 
-                            state={{ resetToList: true }}
+                        <Button
+                            color="inherit"
+                            component={Link}
+                            to="/feed"
                             onTouchEnd={() => blurActiveElement(60)}
                             onMouseUp={() => blurActiveElement(60)}
                             disableFocusRipple
                             sx={{ '&:focus,&:focus-visible': { outline: 'none' }, WebkitTapHighlightColor: 'transparent' }}
                         >
-                            Supplements
+                            Feed
                         </Button>
                     </Box>
-                    
+
                     <Typography
                         variant="h5"
                         noWrap
@@ -141,17 +140,27 @@ function Navbar() {
                     </Typography>
 
                     <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-                        <Button 
-                            color="inherit" 
-                            component={Link} 
-                            to="/supplements" 
-                            state={{ resetToList: true }}
+                        <Button
+                            color="inherit"
+                            component={Link}
+                            to="/feed"
                             onTouchEnd={() => blurActiveElement(60)}
                             onMouseUp={() => blurActiveElement(60)}
                             disableFocusRipple
                             sx={{ '&:focus,&:focus-visible': { outline: 'none' }, WebkitTapHighlightColor: 'transparent' }}
                         >
-                            Supplements
+                            Feed
+                        </Button>
+                        <Button
+                            color="inherit"
+                            component={Link}
+                            to="/supplements"
+                            onTouchEnd={() => blurActiveElement(60)}
+                            onMouseUp={() => blurActiveElement(60)}
+                            disableFocusRipple
+                            sx={{ '&:focus,&:focus-visible': { outline: 'none' }, WebkitTapHighlightColor: 'transparent' }}
+                        >
+                            Browse
                         </Button>
                         {isAdmin && (
                             <>

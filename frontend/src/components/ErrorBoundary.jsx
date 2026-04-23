@@ -3,11 +3,11 @@ import React from 'react';
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error) {
-    return { hasError: true };
+    return { hasError: true, error };
   }
 
   componentDidCatch(error, errorInfo) {
@@ -16,7 +16,18 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      return <h1>Something went wrong. Please try refreshing the page.</h1>;
+      return (
+        <div style={{ padding: 32 }}>
+          <h2>Something went wrong. Please try refreshing the page.</h2>
+          {import.meta.env.DEV && (
+            <pre style={{ background: '#fee', padding: 16, borderRadius: 4, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+              {this.state.error?.toString()}
+              {'\n\n'}
+              {this.state.error?.stack}
+            </pre>
+          )}
+        </div>
+      );
     }
 
     return this.props.children;
