@@ -17,11 +17,15 @@ logger = logging.getLogger(__name__)
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.ImageField(default='profile_pics/default.jpg', upload_to='profile_pics/')
-    chronic_conditions = models.ManyToManyField('Condition', blank=True, related_name='user_profiles')
+    image = models.ImageField(
+        default="profile_pics/default.jpg", upload_to="profile_pics/"
+    )
+    chronic_conditions = models.ManyToManyField(
+        "Condition", blank=True, related_name="user_profiles"
+    )
 
     def __str__(self):
-        return f'{self.user.username} Profile'
+        return f"{self.user.username} Profile"
 
     def save(self, *args, **kwargs):
         logger.debug(f"Starting Profile.save() for user: {self.user.username}")
@@ -30,54 +34,79 @@ class Profile(models.Model):
             try:
                 old_instance = Profile.objects.get(pk=self.pk)
                 if old_instance.image != self.image:
-                    logger.debug("Profile image has changed. Scheduling for processing.")
+                    logger.debug(
+                        "Profile image has changed. Scheduling for processing."
+                    )
                     process_image = True
             except Profile.DoesNotExist:
-                logger.warning(f"Profile with pk={self.pk} not found, but pk exists. Assuming new image for processing.")
+                logger.warning(
+                    f"Profile with pk={self.pk} not found, but pk exists. Assuming new image for processing."
+                )
                 if self.image:
                     process_image = True
         elif self.image:
-            logger.debug("New profile instance with an image. Scheduling for processing.")
+            logger.debug(
+                "New profile instance with an image. Scheduling for processing."
+            )
             process_image = True
 
         # Ensure we don't try to process the default image placeholder
-        if self.image and self.image.name and 'default.jpg' in self.image.name:
+        if self.image and self.image.name and "default.jpg" in self.image.name:
             logger.debug("Image is 'default.jpg', skipping processing.")
             process_image = False
 
         # An uploaded file will have a 'file' attribute. An image from the DB won't until opened.
         # Only check for the presence of a file handle if we actually intend to process the image.
-        if process_image and hasattr(self.image, 'file'):
+        if process_image and hasattr(self.image, "file"):
             try:
-                logger.info(f"Processing profile image for {self.user.username}. Original name: {self.image.name}")
+                logger.info(
+                    f"Processing profile image for {self.user.username}. Original name: {self.image.name}"
+                )
                 img = PILImage.open(self.image)
-                logger.debug(f"Image opened with Pillow. Format: {img.format}, Size: {img.size}, Mode: {img.mode}")
+                logger.debug(
+                    f"Image opened with Pillow. Format: {img.format}, Size: {img.size}, Mode: {img.mode}"
+                )
 
                 if img.height > 300 or img.width > 300:
                     output_size = (300, 300)
                     logger.debug(f"Resizing image to {output_size}")
                     img.thumbnail(output_size, PILImage.Resampling.LANCZOS)
-                
-                buffer = BytesIO()
-                save_format = 'WEBP'
-                save_kwargs = {'quality': 80}
-                
-                if img.mode != 'RGB' and img.mode != 'RGBA':
-                        logger.warning(f"Image mode is {img.mode}. Converting to RGBA for WEBP saving.")
-                        img = img.convert('RGBA') if save_format == 'WEBP' else img.convert('RGB')
 
-                logger.debug(f"Saving processed image to buffer in {save_format} format.")
+                buffer = BytesIO()
+                save_format = "WEBP"
+                save_kwargs = {"quality": 80}
+
+                if img.mode != "RGB" and img.mode != "RGBA":
+                    logger.warning(
+                        f"Image mode is {img.mode}. Converting to RGBA for WEBP saving."
+                    )
+                    img = (
+                        img.convert("RGBA")
+                        if save_format == "WEBP"
+                        else img.convert("RGB")
+                    )
+
+                logger.debug(
+                    f"Saving processed image to buffer in {save_format} format."
+                )
                 img.save(buffer, format=save_format, **save_kwargs)
-                
+
                 file_name_without_ext, _ = os.path.splitext(self.image.name)
-                new_file_name = file_name_without_ext + '.webp'
+                new_file_name = file_name_without_ext + ".webp"
                 logger.debug(f"New file name will be: {new_file_name}")
-                
+
                 # Replace the in-memory file with the processed version before saving
-                self.image.save(new_file_name, ContentFile(buffer.getvalue()), save=False)
-                logger.info(f"Successfully processed and replaced image in memory for {self.user.username}.")
+                self.image.save(
+                    new_file_name, ContentFile(buffer.getvalue()), save=False
+                )
+                logger.info(
+                    f"Successfully processed and replaced image in memory for {self.user.username}."
+                )
             except Exception as e:
-                logger.error(f"Error processing profile image for {self.user.username}: {e}", exc_info=True)
+                logger.error(
+                    f"Error processing profile image for {self.user.username}: {e}",
+                    exc_info=True,
+                )
 
         logger.debug(f"Calling super().save() for profile of {self.user.username}")
         super().save(*args, **kwargs)
@@ -90,24 +119,27 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
     else:
         # For existing users (not newly created), ensure a profile exists.
         Profile.objects.get_or_create(user=instance)
-    
+
     # Now that the profile is guaranteed to exist, call save() on it.
     try:
         instance.profile.save()
     except Exception as e:
-        print(f"Error saving profile for user {instance.username} in signal (possibly during Profile.save()): {e}")
+        print(
+            f"Error saving profile for user {instance.username} in signal (possibly during Profile.save()): {e}"
+        )
 
 
 class Supplement(models.Model):
     name = models.CharField(max_length=255)
     category = models.CharField(max_length=100, blank=True, null=True)
     dosage_unit = models.CharField(max_length=20, blank=True, null=True)
+    description = models.TextField(blank=True, default="")
 
     def __str__(self):
         return self.name
 
     class Meta:
-        unique_together = ('name', 'category')
+        unique_together = ("name", "category")
 
 
 class Condition(models.Model):
@@ -119,36 +151,41 @@ class Condition(models.Model):
 
 class Rating(models.Model):
     FREQUENCY_CHOICES = [
-        ('day', 'Per Day'),
-        ('week', 'Per Week'),
-        ('month', 'Per Month'),
-        ('year', 'Per Year')
+        ("day", "Per Day"),
+        ("week", "Per Week"),
+        ("month", "Per Month"),
+        ("year", "Per Year"),
     ]
 
-    supplement = models.ForeignKey(Supplement, on_delete=models.CASCADE, related_name='ratings')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ratings')
-    conditions = models.ManyToManyField(Condition, related_name='condition_ratings')
-    benefits = models.ManyToManyField(Condition, related_name='benefit_ratings', blank=True)
-    side_effects = models.ManyToManyField(Condition, related_name='side_effect_ratings', blank=True)
+    supplement = models.ForeignKey(
+        Supplement, on_delete=models.CASCADE, related_name="ratings"
+    )
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="ratings")
+    conditions = models.ManyToManyField(Condition, related_name="condition_ratings")
+    benefits = models.ManyToManyField(
+        Condition, related_name="benefit_ratings", blank=True
+    )
+    side_effects = models.ManyToManyField(
+        Condition, related_name="side_effect_ratings", blank=True
+    )
     score = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     comment = models.TextField(blank=True, null=True)
     dosage = models.CharField(max_length=50, blank=True, null=True)
     dosage_frequency = models.PositiveIntegerField(blank=True, null=True)
     frequency_unit = models.CharField(
-        max_length=10,
-        choices=FREQUENCY_CHOICES,
-        blank=True,
-        null=True
+        max_length=10, choices=FREQUENCY_CHOICES, blank=True, null=True
     )
     brands = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    title = models.CharField(max_length=300, blank=True, null=True)
     upvotes = models.PositiveIntegerField(default=0)
+    downvotes = models.PositiveIntegerField(default=0)
     is_edited = models.BooleanField(default=False)
-    image = models.ImageField(upload_to='ratings/', blank=True, null=True)
+    image = models.ImageField(upload_to="ratings/", blank=True, null=True)
 
     def __str__(self):
-        return f'{self.user.username} - {self.supplement.name} - {self.score}'
+        return f"{self.user.username} - {self.supplement.name} - {self.score}"
 
     def save(self, *args, **kwargs):
         process_image = False
@@ -162,7 +199,7 @@ class Rating(models.Model):
         elif self.image:
             process_image = True
 
-        if process_image and self.image and hasattr(self.image.file, 'content_type'):
+        if process_image and self.image and hasattr(self.image.file, "content_type"):
             try:
                 img = PILImage.open(self.image)
                 original_format = img.format
@@ -172,37 +209,48 @@ class Rating(models.Model):
                 img.thumbnail((max_width, max_height), PILImage.Resampling.LANCZOS)
 
                 buffer = BytesIO()
-                save_format = 'WEBP'
-                save_kwargs = {'quality': 80}
+                save_format = "WEBP"
+                save_kwargs = {"quality": 80}
 
-                if original_format == 'PNG':
-                    save_kwargs['lossless'] = True
-                
-                if img.mode != 'RGB' and img.mode != 'RGBA':
-                    img = img.convert('RGBA') if save_format == 'WEBP' and 'lossless' in save_kwargs else img.convert('RGB')
+                if original_format == "PNG":
+                    save_kwargs["lossless"] = True
+
+                if img.mode != "RGB" and img.mode != "RGBA":
+                    img = (
+                        img.convert("RGBA")
+                        if save_format == "WEBP" and "lossless" in save_kwargs
+                        else img.convert("RGB")
+                    )
 
                 img.save(buffer, format=save_format, **save_kwargs)
-                
+
                 file_name_without_ext, _ = os.path.splitext(self.image.name)
-                new_file_name = file_name_without_ext + '.webp'
-                
-                self.image.save(new_file_name, ContentFile(buffer.getvalue()), save=False)
+                new_file_name = file_name_without_ext + ".webp"
+
+                self.image.save(
+                    new_file_name, ContentFile(buffer.getvalue()), save=False
+                )
             except Exception as e:
                 print(f"Error processing image for Rating {self.pk}: {e}")
-        
+
         super().save(*args, **kwargs)
 
 
 class Comment(models.Model):
-    rating = models.ForeignKey(Rating, related_name='comments', on_delete=models.CASCADE, null=True, blank=True)
-    parent_comment = models.ForeignKey('self', related_name='replies', on_delete=models.CASCADE, null=True, blank=True)
+    rating = models.ForeignKey(
+        Rating, related_name="comments", on_delete=models.CASCADE, null=True, blank=True
+    )
+    parent_comment = models.ForeignKey(
+        "self", related_name="replies", on_delete=models.CASCADE, null=True, blank=True
+    )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_edited = models.BooleanField(default=False)
     upvotes = models.PositiveIntegerField(default=0)
-    image = models.ImageField(upload_to='comments/', blank=True, null=True)
+    downvotes = models.PositiveIntegerField(default=0)
+    image = models.ImageField(upload_to="comments/", blank=True, null=True)
 
     def __str__(self):
         if self.rating:
@@ -221,7 +269,7 @@ class Comment(models.Model):
         elif self.image:
             process_image = True
 
-        if process_image and self.image and hasattr(self.image.file, 'content_type'):
+        if process_image and self.image and hasattr(self.image.file, "content_type"):
             try:
                 img = PILImage.open(self.image)
                 original_format = img.format
@@ -231,24 +279,30 @@ class Comment(models.Model):
                 img.thumbnail((max_width, max_height), PILImage.Resampling.LANCZOS)
 
                 buffer = BytesIO()
-                save_format = 'WEBP'
-                save_kwargs = {'quality': 75}
+                save_format = "WEBP"
+                save_kwargs = {"quality": 75}
 
-                if original_format == 'PNG':
-                    save_kwargs['lossless'] = True
-                
-                if img.mode != 'RGB' and img.mode != 'RGBA':
-                    img = img.convert('RGBA') if save_format == 'WEBP' and 'lossless' in save_kwargs else img.convert('RGB')
+                if original_format == "PNG":
+                    save_kwargs["lossless"] = True
+
+                if img.mode != "RGB" and img.mode != "RGBA":
+                    img = (
+                        img.convert("RGBA")
+                        if save_format == "WEBP" and "lossless" in save_kwargs
+                        else img.convert("RGB")
+                    )
 
                 img.save(buffer, format=save_format, **save_kwargs)
-                
+
                 file_name_without_ext, _ = os.path.splitext(self.image.name)
-                new_file_name = file_name_without_ext + '.webp'
-                
-                self.image.save(new_file_name, ContentFile(buffer.getvalue()), save=False)
+                new_file_name = file_name_without_ext + ".webp"
+
+                self.image.save(
+                    new_file_name, ContentFile(buffer.getvalue()), save=False
+                )
             except Exception as e:
                 print(f"Error processing image for Comment {self.pk}: {e}")
-        
+
         super().save(*args, **kwargs)
 
 
@@ -275,19 +329,23 @@ class Brand(models.Model):
 
 
 class UserUpvote(models.Model):
+    VOTE_UP = "up"
+    VOTE_DOWN = "down"
+    VOTE_CHOICES = [(VOTE_UP, "Up"), (VOTE_DOWN, "Down")]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     rating = models.ForeignKey(Rating, null=True, blank=True, on_delete=models.CASCADE)
-    comment = models.ForeignKey(Comment, null=True, blank=True, on_delete=models.CASCADE)
+    comment = models.ForeignKey(
+        Comment, null=True, blank=True, on_delete=models.CASCADE
+    )
+    vote_type = models.CharField(max_length=4, choices=VOTE_CHOICES, default=VOTE_UP)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = (
-            ('user', 'rating'), 
-            ('user', 'comment')
-        )
+        unique_together = (("user", "rating"), ("user", "comment"))
         indexes = [
-            models.Index(fields=['user', 'rating']),
-            models.Index(fields=['user', 'comment']),
+            models.Index(fields=["user", "rating"]),
+            models.Index(fields=["user", "comment"]),
         ]
 
     def __str__(self):

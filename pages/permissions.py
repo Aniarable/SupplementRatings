@@ -3,12 +3,15 @@
 from rest_framework.permissions import BasePermission
 from rest_framework import permissions
 
+
 class IsAdminUser(BasePermission):
     """
     Allows access only to admin users.
     """
+
     def has_permission(self, request, view):
         return bool(request.user and request.user.is_staff)
+
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
@@ -20,11 +23,12 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
         # Write permissions are only allowed to the owner
         return obj.user == request.user
 
+
 class IsOwnerOrAdmin(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         # Admin can do anything
         if request.user.is_staff:
             return True
-            
+
         # Owner can only access their own objects
         return obj.user == request.user

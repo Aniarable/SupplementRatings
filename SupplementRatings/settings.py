@@ -25,31 +25,31 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECOND_SECRET_KEY')
+SECRET_KEY = config("SECOND_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('PRODUCTION', cast=bool, default=None)
+DEBUG = config("PRODUCTION", cast=bool, default=None)
 DEBUG = not DEBUG
 
 
 # Development and Production URLs
 FRONTEND_DEV_URLS = [
-    'http://127.0.0.1:5173',
-    'http://localhost:5173',
-    'http://127.0.0.1:5174',
-    'http://localhost:5174',
+    "http://127.0.0.1:5173",
+    "http://localhost:5173",
+    "http://127.0.0.1:5174",
+    "http://localhost:5174",
 ]
 
 FRONTEND_PROD_URLS = [
-    'https://supplementratings.com',
-    'https://www.supplementratings.com',
+    "https://supplementratings.com",
+    "https://www.supplementratings.com",
 ]
 
-FRONTEND_URL = (FRONTEND_PROD_URLS[0] if not DEBUG else FRONTEND_DEV_URLS[0])
+FRONTEND_URL = FRONTEND_PROD_URLS[0] if not DEBUG else FRONTEND_DEV_URLS[0]
 
 # Development and Production CORS/Host settings
 if DEBUG:
-    ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+    ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
     CORS_ALLOWED_ORIGINS = FRONTEND_DEV_URLS
     CORS_ALLOW_CREDENTIALS = True
     SECURE_SSL_REDIRECT = False
@@ -57,148 +57,138 @@ if DEBUG:
     CSRF_COOKIE_SECURE = False
     CSRF_TRUSTED_ORIGINS = FRONTEND_DEV_URLS
 else:
-    ALLOWED_HOSTS = ['3.15.155.109', '.supplementratings.com']
+    ALLOWED_HOSTS = ["3.15.155.109", ".supplementratings.com"]
     CORS_ALLOWED_ORIGINS = FRONTEND_PROD_URLS
     CORS_ALLOW_CREDENTIALS = True
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     CSRF_TRUSTED_ORIGINS = FRONTEND_PROD_URLS
-CORS_ALLOWED_METHODS = [
-    'GET',
-    'POST',
-    'PUT',
-    'PATCH',
-    'DELETE',
-    'OPTIONS'
-]
+CORS_ALLOWED_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
 CORS_ALLOWED_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
 ]
 
 # Application definition
 
 INSTALLED_APPS = [
-    'rest_framework',
-    'rest_framework_simplejwt',
-    'corsheaders',
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django_filters',
-    'pages.apps.PagesConfig',
-    'storages',  # for handling file uploads
+    "rest_framework",
+    "rest_framework_simplejwt",
+    "corsheaders",
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django_filters",
+    "pages.apps.PagesConfig",
+    "storages",  # for handling file uploads
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'SupplementRatings.urls'
+ROOT_URLCONF = "SupplementRatings.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'SupplementRatings.wsgi.application'
+WSGI_APPLICATION = "SupplementRatings.wsgi.application"
 
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': config('DB_ENGINE', default='django.db.backends.postgresql'),
-        'NAME': config('DB_NAME', default='supplement_ratings_dev'),
-        'USER': config('DB_USER', default='myuser'),
-        'PASSWORD': config('DB_PASSWORD'),  # MUST be set in your .env file
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
+    "default": {
+        "ENGINE": config("DB_ENGINE", default="django.db.backends.postgresql"),
+        "NAME": config("DB_NAME", default="supplement_ratings_dev"),
+        "USER": config("DB_USER", default="myuser"),
+        "PASSWORD": config("DB_PASSWORD"),  # MUST be set in your .env file
+        "HOST": config("DB_HOST", default="localhost"),
+        "PORT": config("DB_PORT", default="5432"),
     }
 }
 
 DEV_THROTTLE_RATES = {
-    'anon': '10000/minute',
-    'user': '20000/minute',
-    'auth': '200/minute',
-    'register': '200/minute',
+    "anon": "10000/minute",
+    "user": "20000/minute",
+    "auth": "200/minute",
+    "register": "200/minute",
 }
 
 PROD_THROTTLE_RATES = {
-    'anon': '100/day',
-    'user': '1000/day',
-    'auth': '5/minute',
-    'register': '5/hour',
+    "anon": "100/day",
+    "user": "1000/day",
+    "auth": "5/minute",
+    "register": "5/hour",
 }
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
     ],
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle'
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
     ],
-    'DEFAULT_THROTTLE_RATES': DEV_THROTTLE_RATES if DEBUG else PROD_THROTTLE_RATES,
+    "DEFAULT_THROTTLE_RATES": DEV_THROTTLE_RATES if DEBUG else PROD_THROTTLE_RATES,
 }
 
 REST_FRAMEWORK_THROTTLE_RATES = DEV_THROTTLE_RATES if DEBUG else PROD_THROTTLE_RATES
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=4),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'UPDATE_LAST_LOGIN': True,
-
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'VERIFYING_KEY': None,
-    'AUDIENCE': None,
-    'ISSUER': None,
-
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-    'TOKEN_TYPE_CLAIM': 'token_type',
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=4),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "VERIFYING_KEY": None,
+    "AUDIENCE": None,
+    "ISSUER": None,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
+    "USER_ID_FIELD": "id",
+    "USER_ID_CLAIM": "user_id",
+    "AUTH_TOKEN_CLASSES": ("rest_framework_simplejwt.tokens.AccessToken",),
+    "TOKEN_TYPE_CLAIM": "token_type",
 }
 
 
@@ -207,16 +197,16 @@ SIMPLE_JWT = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
@@ -224,9 +214,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
@@ -236,25 +226,31 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 # Media files (User uploaded files)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Default primary key field type
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Email Configuration - Default to Amazon SES SMTP (override via .env as needed)
-EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
-EMAIL_HOST = config('EMAIL_HOST', default='email-smtp.us-east-2.amazonaws.com')  # SES SMTP endpoint (Ohio)
-EMAIL_PORT = config('EMAIL_PORT', cast=int, default=587)
-APP_EMAIL_USE_SSL = config('APP_EMAIL_USE_SSL', cast=bool, default=False)
-APP_EMAIL_USE_TLS = config('APP_EMAIL_USE_TLS', cast=bool, default=True)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')  # SES SMTP username
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')  # SES SMTP password
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='support@supplementratings.com')
+EMAIL_BACKEND = config(
+    "EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend"
+)
+EMAIL_HOST = config(
+    "EMAIL_HOST", default="email-smtp.us-east-2.amazonaws.com"
+)  # SES SMTP endpoint (Ohio)
+EMAIL_PORT = config("EMAIL_PORT", cast=int, default=587)
+APP_EMAIL_USE_SSL = config("APP_EMAIL_USE_SSL", cast=bool, default=False)
+APP_EMAIL_USE_TLS = config("APP_EMAIL_USE_TLS", cast=bool, default=True)
+EMAIL_HOST_USER = config("EMAIL_HOST_USER")  # SES SMTP username
+EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")  # SES SMTP password
+DEFAULT_FROM_EMAIL = config(
+    "DEFAULT_FROM_EMAIL", default="support@supplementratings.com"
+)
 
 # Map to Django expected flags (avoid shell var conflicts)
 EMAIL_USE_SSL = APP_EMAIL_USE_SSL
@@ -275,31 +271,35 @@ IS_PRODUCTION = not DEBUG
 
 if IS_PRODUCTION:
     # AWS S3 settings
-    AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
-    AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_KEY')
-    AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
-    AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='us-east-2') # Your bucket region
-    AWS_S3_FILE_OVERWRITE = False # Default, set to True if you want to overwrite files
-    AWS_DEFAULT_ACL = None # Disable setting ACLs
+    AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_KEY")
+    AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
+    AWS_S3_REGION_NAME = config(
+        "AWS_S3_REGION_NAME", default="us-east-2"
+    )  # Your bucket region
+    AWS_S3_FILE_OVERWRITE = False  # Default, set to True if you want to overwrite files
+    AWS_DEFAULT_ACL = None  # Disable setting ACLs
     AWS_S3_OBJECT_PARAMETERS = {
-        'CacheControl': 'max-age=86400', # Cache for 1 day
+        "CacheControl": "max-age=86400",  # Cache for 1 day
     }
     AWS_QUERYSTRING_AUTH = True  # Enable signed URLs
     AWS_QUERYSTRING_EXPIRE = 3600  # URL lifetime in seconds (e.g., 1 hour)
-    AWS_LOCATION = 'media' # Optional: subdirectory in your bucket for media files
-    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
+    AWS_LOCATION = "media"  # Optional: subdirectory in your bucket for media files
+    AWS_S3_CUSTOM_DOMAIN = (
+        f"{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com"
+    )
 
     # Static and media files
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
     # STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage' # If you also want to serve static files from S3
 
-    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
+    MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/"
     # STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/static/' # If serving static from S3
 
 else:
     # Local media storage settings (development)
-    MEDIA_URL = '/media/'
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 
 SECURE_BROWSER_XSS_FILTER = True
@@ -310,32 +310,32 @@ SECURE_HSTS_PRELOAD = True
 
 # Password validation
 PASSWORD_HASHERS = [
-    'django.contrib.auth.hashers.Argon2PasswordHasher',
-    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
-    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
 ]
 
-CSRF_COOKIE_NAME = 'csrftoken'
-CSRF_HEADER_NAME = 'X-CSRFToken'
+CSRF_COOKIE_NAME = "csrftoken"
+CSRF_HEADER_NAME = "X-CSRFToken"
 
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
         },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
+        "simple": {
+            "format": "{levelname} {message}",
+            "style": "{",
         },
     },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
         },
         # 'file': { # Optional: Add a file handler
         #     'level': 'DEBUG',
@@ -344,20 +344,20 @@ LOGGING = {
         #     'formatter': 'verbose',
         # },
     },
-    'root': {
-        'handlers': ['console'], # Add 'file' here if using file handler
-        'level': 'WARNING',
+    "root": {
+        "handlers": ["console"],  # Add 'file' here if using file handler
+        "level": "WARNING",
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'], # Add 'file' here if using file handler
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-            'propagate': False,
+    "loggers": {
+        "django": {
+            "handlers": ["console"],  # Add 'file' here if using file handler
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
         },
-        'pages': { # Your app's logger
-            'handlers': ['console'], # Add 'file' here if using file handler
-            'level': 'DEBUG',
-            'propagate': False,
+        "pages": {  # Your app's logger
+            "handlers": ["console"],  # Add 'file' here if using file handler
+            "level": "DEBUG",
+            "propagate": False,
         },
     },
 }
