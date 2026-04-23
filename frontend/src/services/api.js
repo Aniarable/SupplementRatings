@@ -325,6 +325,11 @@ const fetchWithRequestCache = async (key, fetcher) => {
     return p;
 };
 
+export const invalidateCache = (key) => {
+    requestCache.delete(key);
+    inFlightRequests.delete(key);
+};
+
 const authenticatedFetch = async (endpoint, options = {}) => {
     const token = getAuthToken();
     if (!token) {
@@ -805,22 +810,32 @@ export const deleteBrand = async (brandId, options = {}) => {
     }
 };
 
-export const upvoteRating = async (ratingId) => {
+export const getRating = async (ratingId) => {
     try {
-        const response = await API.post(`ratings/${ratingId}/upvote/`);
+        const response = await API.get(`ratings/${ratingId}/`);
         return response.data;
     } catch (error) {
-        console.error('Error upvoting rating:', error);
+        console.error('Error fetching rating:', error);
         throw error;
     }
 };
 
-export const upvoteComment = async (commentId) => {
+export const upvoteRating = async (ratingId, voteType = 'up') => {
     try {
-        const response = await API.post(`comments/${commentId}/upvote/`);
+        const response = await API.post(`ratings/${ratingId}/upvote/`, { vote_type: voteType });
         return response.data;
     } catch (error) {
-        console.error('Error upvoting comment:', error);
+        console.error('Error voting on rating:', error);
+        throw error;
+    }
+};
+
+export const upvoteComment = async (commentId, voteType = 'up') => {
+    try {
+        const response = await API.post(`comments/${commentId}/upvote/`, { vote_type: voteType });
+        return response.data;
+    } catch (error) {
+        console.error('Error voting on comment:', error);
         throw error;
     }
 };
@@ -902,6 +917,17 @@ export const deleteCommentByAdmin = async (commentId) => {
     } catch (error) {
         console.error('Error deleting comment by admin:', error.response?.data || error.message);
         throw error.response?.data || error;
+    }
+};
+
+// Global feed of all ratings (Reddit-style landing feed)
+export const getFeed = async (params = {}) => {
+    try {
+        const response = await API.get('ratings/', { params });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching feed:', error);
+        throw error;
     }
 };
 

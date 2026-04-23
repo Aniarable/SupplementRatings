@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { getSupplement, addRating, updateRating, getConditions, getBrands } from '../services/api';
 import ReviewDetail from '../components/ReviewDetail';
@@ -35,6 +35,8 @@ import { IconButton } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { useBanner } from '../context/BannerContext';
+import AmazonLink from '../components/AmazonLink';
+import ReviewTagChips from '../components/ReviewTagChips';
 import { DEFAULT_PROFILE_IMAGE_URL } from '../config';
 
 const defaultProfileImage = DEFAULT_PROFILE_IMAGE_URL;
@@ -75,19 +77,19 @@ const SupplementRatingItem = ({ rating, handleReviewClick, user, handleEditRatin
                 gap: { xs: 1, sm: 0 }
             }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <RouterLink to={`/profile/${rating.user.username}`} style={{ textDecoration: 'none' }} onClick={(e) => e.stopPropagation()}>
-                        <Avatar 
-                            src={rating.user.profile_image_url || defaultProfileImage} 
-                            alt={rating.user.username}
+                    <RouterLink to={`/profile/${rating.user?.username}`} style={{ textDecoration: 'none' }} onClick={(e) => e.stopPropagation()}>
+                        <Avatar
+                            src={rating.user?.profile_image_url || defaultProfileImage}
+                            alt={rating.user?.username}
                             sx={{ width: 40, height: 40 }}
                         />
                     </RouterLink>
                     <Box>
-                        <RouterLink to={`/profile/${rating.user.username}`} style={{ textDecoration: 'none', color: 'inherit' }} onClick={(e) => e.stopPropagation()}>
+                        <RouterLink to={`/profile/${rating.user?.username}`} style={{ textDecoration: 'none', color: 'inherit' }} onClick={(e) => e.stopPropagation()}>
                             <Typography variant="subtitle1" fontWeight="bold" sx={{
                                 "&:hover": { textDecoration: 'underline'}
                             }}>
-                                {rating.user.username}
+                                {rating.user?.username ?? '[deleted]'}
                             </Typography>
                         </RouterLink>
                         {rating.is_edited && (
@@ -104,7 +106,7 @@ const SupplementRatingItem = ({ rating, handleReviewClick, user, handleEditRatin
                             {rating.upvotes || 0}
                         </Typography>
                     </IconButton>
-                    {user && user.id === rating.user.id && (
+                    {user && user.id === rating.user?.id && (
                         <Button 
                             size="small" 
                             onClick={(e) => {
@@ -119,23 +121,20 @@ const SupplementRatingItem = ({ rating, handleReviewClick, user, handleEditRatin
                 </Box>
             </Box>
 
+            {/* Title */}
+            {rating.title && (
+                <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>
+                    {rating.title}
+                </Typography>
+            )}
+
             {/* Rating Details */}
             <Box sx={{ mb: 1 }}>
-                {rating.condition_names && rating.condition_names.length > 0 && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        Intended Purpose: {rating.condition_names.join(', ')}
-                    </Typography>
-                )}
-                {rating.benefit_names && rating.benefit_names.length > 0 && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        Benefits For: {rating.benefit_names.join(', ')}
-                    </Typography>
-                )}
-                {rating.side_effect_names && rating.side_effect_names.length > 0 && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                        Side Effects: {rating.side_effect_names.join(', ')}
-                    </Typography>
-                )}
+                <ReviewTagChips
+                    conditionNames={rating.condition_names}
+                    benefitNames={rating.benefit_names}
+                    sideEffectNames={rating.side_effect_names}
+                />
                 {rating.dosage && (
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                         Dosage: {rating.dosage.replace(/\s+/g, '')}
@@ -202,6 +201,7 @@ function SupplementDetailPage() {
     // Rating dialog state
     const [ratingDialogOpen, setRatingDialogOpen] = useState(false);
     const [ratingScore, setRatingScore] = useState(1);
+    const [ratingTitle, setRatingTitle] = useState('');
     const [ratingComment, setRatingComment] = useState('');
     const [conditions, setConditions] = useState([]);
     const [selectedConditions, setSelectedConditions] = useState([]);
@@ -218,7 +218,8 @@ function SupplementDetailPage() {
     const [searchCondition, setSearchCondition] = useState('');
     const { setCurrentSupplementName } = useBanner();
 
-    const { ratingId, commentId } = location.state || {};
+    const { ratingId, commentId, openRatingDialog } = location.state || {};
+    const autoOpenDialogRef = useRef(false);
 
     const supplementDosageUnit = supplement?.dosage_unit;
 
@@ -335,6 +336,7 @@ function SupplementDetailPage() {
 
     const resetFormState = useCallback(() => {
         setRatingScore(1);
+        setRatingTitle('');
         setRatingComment('');
         setSelectedConditions([]);
         setSelectedBenefits([]);
@@ -347,6 +349,16 @@ function SupplementDetailPage() {
         setRatingImage(null);
         setEditingRating(null);
     }, [supplementDosageUnit]);
+
+    // Auto-open rating dialog when navigated here with openRatingDialog state.
+    // Must be declared AFTER resetFormState to avoid TDZ error in the deps array.
+    useEffect(() => {
+        if (openRatingDialog && !loading && supplement && !autoOpenDialogRef.current) {
+            autoOpenDialogRef.current = true;
+            resetFormState();
+            setRatingDialogOpen(true);
+        }
+    }, [openRatingDialog, loading, supplement, resetFormState]);
 
     const parseDosage = useCallback((dosageString) => {
         if (!dosageString) return { value: '', unit: 'mg' };
@@ -366,6 +378,7 @@ function SupplementDetailPage() {
         setSelectedBenefits(rating.benefits ? rating.benefits.map(id => conditions.find(c => c.id === id)).filter(c => c) : []);
         setSelectedSideEffects(rating.side_effects ? rating.side_effects.map(id => conditions.find(c => c.id === id)).filter(c => c) : []);
         setRatingScore(rating.score);
+        setRatingTitle(rating.title || '');
         setRatingComment(rating.comment || '');
         setRatingImage(null);
         
@@ -405,7 +418,7 @@ function SupplementDetailPage() {
         try {
             const formData = new FormData();
             formData.append('supplement', supplement.id);
-            
+
             selectedConditions.forEach(condition => {
                 formData.append('conditions', condition.id);
             });
@@ -415,7 +428,8 @@ function SupplementDetailPage() {
             selectedSideEffects.forEach(sideEffect => {
                 formData.append('side_effects', sideEffect.id);
             });
-            
+
+            formData.append('title', ratingTitle || '');
             formData.append('score', ratingScore);
             formData.append('comment', ratingComment || '');
             
@@ -453,7 +467,7 @@ function SupplementDetailPage() {
         } catch (error) {
             toast.error(error.userMessage || 'Failed to submit rating. Please try again.');
         }
-    }, [selectedConditions, ratingScore, supplement, selectedBenefits, selectedSideEffects, ratingDosage, ratingDialogDosageUnit, ratingDosageFrequency, ratingFrequencyUnit, selectedBrand, ratingImage, editingRating, resetFormState, supplementId, ratingComment]);
+    }, [selectedConditions, ratingScore, ratingTitle, ratingComment, supplement, selectedBenefits, selectedSideEffects, ratingDosage, ratingDialogDosageUnit, ratingDosageFrequency, ratingFrequencyUnit, selectedBrand, ratingImage, editingRating, resetFormState, supplementId]);
 
     if (loading) {
         return (
@@ -523,11 +537,22 @@ function SupplementDetailPage() {
             </Button>
             
             <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, mb: 1, flexWrap: 'wrap' }}>
                     <Typography variant="h5">
                         {supplement.name}
                     </Typography>
+                    <AmazonLink supplementName={supplement.name} />
                 </Box>
+
+                {supplement.description && (
+                    <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ mb: 2.5, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}
+                    >
+                        {supplement.description}
+                    </Typography>
+                )}
 
                 <Box sx={{ mb: 3 }}>
                     <Box sx={{ 
@@ -546,7 +571,7 @@ function SupplementDetailPage() {
                                     'No ratings yet'
                                 )}
                             </Typography>
-                            {user && !supplement.ratings?.some(r => r.user.id === user.id) && (
+                            {user && !supplement.ratings?.some(r => r.user?.id === user.id) && (
                                 <Button
                                     startIcon={<AddIcon />}
                                     variant="contained"
@@ -576,7 +601,7 @@ function SupplementDetailPage() {
                                 key={rating.id}
                                 rating={rating}
                                 user={user}
-                                handleReviewClick={setSelectedReview}
+                                handleReviewClick={(r) => navigate(`/reviews/${r.id}`)}
                                 handleEditRating={handleEditRating}
                             />
                         ))
@@ -653,6 +678,16 @@ function SupplementDetailPage() {
 
                         <TextField
                             fullWidth
+                            label="Title (optional but encouraged)"
+                            placeholder='e.g. "Fixed my joint pain after 2 weeks"'
+                            value={ratingTitle}
+                            onChange={(e) => setRatingTitle(e.target.value)}
+                            inputProps={{ maxLength: 300 }}
+                            sx={{ mb: 2 }}
+                        />
+
+                        <TextField
+                            fullWidth
                             multiline
                             rows={4}
                             label="Comment"
@@ -661,6 +696,31 @@ function SupplementDetailPage() {
                             sx={{ mb: 2 }}
                         />
 
+                        {/* Quick-add saved chronic conditions */}
+                        {user?.chronic_conditions?.length > 0 && (
+                            <Box sx={{ mb: 1, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                                <Typography variant="caption" color="text.secondary">My saved conditions:</Typography>
+                                {user.chronic_conditions.map(c => {
+                                    const alreadyAdded = selectedConditions.some(sc => sc.id === c.id);
+                                    return (
+                                        <Chip
+                                            key={c.id}
+                                            label={c.name}
+                                            size="small"
+                                            color={alreadyAdded ? "success" : "default"}
+                                            variant={alreadyAdded ? "filled" : "outlined"}
+                                            onClick={() => {
+                                                if (!alreadyAdded) {
+                                                    const fullCondition = conditions.find(opt => opt.id === c.id) || c;
+                                                    setSelectedConditions(prev => [...prev, fullCondition]);
+                                                }
+                                            }}
+                                            sx={{ cursor: alreadyAdded ? 'default' : 'pointer' }}
+                                        />
+                                    );
+                                })}
+                            </Box>
+                        )}
                         <Autocomplete
                             multiple
                             options={conditions}
@@ -668,6 +728,7 @@ function SupplementDetailPage() {
                             value={selectedConditions}
                             onChange={(_, newValue) => setSelectedConditions(newValue)}
                             onInputChange={(_, newInputValue) => setSearchCondition(newInputValue)}
+                            isOptionEqualToValue={(option, value) => option.id === value.id}
                             renderInput={(params) => (
                                 <TextField
                                     {...params}

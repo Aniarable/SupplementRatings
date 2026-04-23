@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import AmazonBanner from './components/AmazonBanner';
 import { BannerProvider } from './context/BannerContext';
 import Login from './pages/Login';
 import Logout from './pages/Logout';
 import Signup from './pages/Signup';
 import SearchableSupplementList from './components/SearchableSupplementList';
 import SupplementDetailPage from './pages/SupplementDetailPage';
+import SupplementsFeed from './pages/SupplementsFeed';
 import UploadCSV from './components/UploadCSV';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -22,6 +22,7 @@ import AccountsPage from './pages/AccountsPage';
 import UserProfilePage from './pages/UserProfilePage';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPasswordConfirm from './pages/ResetPasswordConfirm';
+import ReviewPage from './pages/ReviewPage';
 import SessionWarning from './components/SessionWarning';
 import { useAuth } from './context/AuthContext';
 import { sessionManager } from './services/api';
@@ -71,7 +72,6 @@ function App() {
 
     return (
         <BannerProvider>
-            <AmazonBanner />
             <Navbar />
             <ToastContainer
                 position="top-right"
@@ -92,9 +92,11 @@ function App() {
                 timeRemaining={sessionTimeRemaining}
             />
             <Routes>
-                <Route path="/" element={<Navigate to="/supplements" replace />} />
+                <Route path="/" element={<Navigate to="/feed" replace />} />
+                <Route path="/feed" element={<SupplementsFeed />} />
                 <Route path="/supplements" element={<SearchableSupplementList />} />
                 <Route path="/supplements/:id" element={<SupplementDetailPage />} />
+                <Route path="/reviews/:ratingId" element={<ReviewPage />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/logout" element={<Logout />} />
                 <Route path="/signup" element={<Signup />} />
