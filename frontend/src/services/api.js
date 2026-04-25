@@ -1002,6 +1002,15 @@ export const updateUserChronicConditions = async (conditionIds) => {
     }
 };
 
+export const changeUsername = async (newUsername) => {
+    try {
+        const response = await API.put('user/username/', { username: newUsername });
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || error;
+    }
+};
+
 export const getUserPublicProfile = async (username) => {
     try {
         const response = await API.get(`profiles/${username}/`); // Matches the new backend URL structure

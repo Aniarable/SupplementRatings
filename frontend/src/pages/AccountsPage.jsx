@@ -15,7 +15,6 @@ import {
     Chip,
     Button,
     Avatar,
-
     Autocomplete,
     TextField as MuiTextField,
     Rating as MuiRating,
@@ -25,11 +24,14 @@ import {
     DialogContentText,
     DialogTitle,
     Divider,
-    Link
+    Link,
+    InputAdornment,
+    IconButton,
 } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
 import { format } from 'date-fns';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import API, { updateProfileImage as updateProfileImageAPI, getAllConditions, updateUserChronicConditions as updateUserChronicConditionsAPI, deleteMyRating, updateComment as updateCommentAPI, deleteComment as deleteCommentAPI, invalidateCache } from '../services/api';
+import API, { updateProfileImage as updateProfileImageAPI, getAllConditions, updateUserChronicConditions as updateUserChronicConditionsAPI, deleteMyRating, updateComment as updateCommentAPI, deleteComment as deleteCommentAPI, invalidateCache, changeUsername as changeUsernameAPI } from '../services/api';
 import { styled } from '@mui/material/styles';
 import { DEFAULT_PROFILE_IMAGE_URL } from '../config';
 import { toast } from 'react-toastify';
@@ -72,6 +74,12 @@ function AccountsPage() {
     const [editedCommentContent, setEditedCommentContent] = useState('');
     const [commentToDelete, setCommentToDelete] = useState(null);
     const [showDeleteCommentDialog, setShowDeleteCommentDialog] = useState(false);
+
+    // Username change
+    const [usernameEditing, setUsernameEditing] = useState(false);
+    const [usernameInput, setUsernameInput] = useState('');
+    const [usernameError, setUsernameError] = useState('');
+    const [usernameLoading, setUsernameLoading] = useState(false);
 
     const fetchRatings = useCallback(async (url, isInitialLoad = true) => {
         const token = localStorage.getItem('token');
@@ -231,6 +239,36 @@ function AccountsPage() {
         }
     };
 
+    const handleOpenUsernameEdit = () => {
+        setUsernameInput(user?.username || '');
+        setUsernameError('');
+        setUsernameEditing(true);
+    };
+
+    const handleCancelUsernameEdit = () => {
+        setUsernameEditing(false);
+        setUsernameError('');
+    };
+
+    const handleSaveUsername = async () => {
+        const trimmed = usernameInput.trim();
+        if (trimmed === user?.username) { setUsernameEditing(false); return; }
+        setUsernameLoading(true);
+        setUsernameError('');
+        try {
+            const data = await changeUsernameAPI(trimmed);
+            updateUser({ username: data.username, username_change_available_at: null });
+            invalidateCache('user_me');
+            setUsernameEditing(false);
+            toast.success('Username updated!');
+        } catch (err) {
+            const msg = err?.username?.[0] || err?.detail || 'Failed to update username.';
+            setUsernameError(msg);
+        } finally {
+            setUsernameLoading(false);
+        }
+    };
+
     const handleEditRating = (rating) => {
         navigate(`/supplements/${rating.supplement}`, { 
             state: { 
@@ -366,6 +404,67 @@ function AccountsPage() {
                         Welcome back, {user.username}!
                     </Typography>
                         {uploadError && <Alert severity="error" sx={{mt: 1, width: '100%'}} onClose={() => setUploadError(null)}>{uploadError}</Alert>}
+                    </Box>
+                )}
+
+                {/* ── Username change ── */}
+                {user && (
+                    <Box sx={{ mt: 3, mb: 3, p: 2, border: '1px solid #eee', borderRadius: '4px' }}>
+                        <Typography variant="h5" component="h2" gutterBottom>
+                            Username
+                        </Typography>
+
+                        {!usernameEditing ? (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                                    {user.username}
+                                </Typography>
+                                {user.username_change_available_at ? (
+                                    <Typography variant="caption" color="text.disabled" sx={{ ml: 1 }}>
+                                        Can change after{' '}
+                                        {new Date(user.username_change_available_at).toLocaleDateString(
+                                            undefined,
+                                            { month: 'long', day: 'numeric', year: 'numeric' }
+                                        )}
+                                    </Typography>
+                                ) : (
+                                    <IconButton size="small" onClick={handleOpenUsernameEdit} title="Change username">
+                                        <EditIcon fontSize="small" />
+                                    </IconButton>
+                                )}
+                            </Box>
+                        ) : (
+                            <Box>
+                                <MuiTextField
+                                    size="small"
+                                    label="New username"
+                                    value={usernameInput}
+                                    onChange={e => { setUsernameInput(e.target.value); setUsernameError(''); }}
+                                    onKeyDown={e => { if (e.key === 'Enter') handleSaveUsername(); if (e.key === 'Escape') handleCancelUsernameEdit(); }}
+                                    error={!!usernameError}
+                                    helperText={usernameError || '3–20 characters, letters, numbers, and underscores only'}
+                                    disabled={usernameLoading}
+                                    autoFocus
+                                    sx={{ mb: 1.5, width: 260 }}
+                                />
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <Button
+                                        variant="contained"
+                                        size="small"
+                                        onClick={handleSaveUsername}
+                                        disabled={usernameLoading || !usernameInput.trim()}
+                                    >
+                                        {usernameLoading ? <CircularProgress size={16} /> : 'Save'}
+                                    </Button>
+                                    <Button size="small" onClick={handleCancelUsernameEdit} disabled={usernameLoading}>
+                                        Cancel
+                                    </Button>
+                                </Box>
+                                <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mt: 1 }}>
+                                    You can change your username once every 30 days.
+                                </Typography>
+                            </Box>
+                        )}
                     </Box>
                 )}
 

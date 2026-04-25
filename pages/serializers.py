@@ -179,6 +179,7 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 class BasicUserSerializer(serializers.ModelSerializer):
     profile_image_url = serializers.SerializerMethodField()
     chronic_conditions = serializers.SerializerMethodField()
+    username_change_available_at = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -187,6 +188,7 @@ class BasicUserSerializer(serializers.ModelSerializer):
             "username",
             "profile_image_url",
             "chronic_conditions",
+            "username_change_available_at",
         ]
 
     def get_profile_image_url(self, obj):
@@ -223,6 +225,40 @@ class BasicUserSerializer(serializers.ModelSerializer):
             conditions = obj.profile.chronic_conditions.all()
             return ConditionSerializer(conditions, many=True, context=self.context).data
         return []
+
+    def get_username_change_available_at(self, obj):
+        from django.utils import timezone
+        from datetime import timedelta
+
+        if not hasattr(obj, "profile"):
+            return None
+        last = obj.profile.last_username_change
+        if not last:
+            return None
+        available_at = last + timedelta(days=30)
+        if timezone.now() >= available_at:
+            return None
+        return available_at.isoformat()
+
+
+class UsernameChangeSerializer(serializers.Serializer):
+    username = serializers.CharField(min_length=3, max_length=20)
+
+    def validate_username(self, value):
+        import re
+
+        if not re.match(r"^[a-zA-Z0-9_]+$", value):
+            raise serializers.ValidationError(
+                "Username may only contain letters, numbers, and underscores."
+            )
+        request = self.context.get("request")
+        if (
+            User.objects.filter(username__iexact=value)
+            .exclude(pk=request.user.pk)
+            .exists()
+        ):
+            raise serializers.ValidationError("That username is already taken.")
+        return value
 
 
 class CommentSerializer(serializers.ModelSerializer):

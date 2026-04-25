@@ -44,6 +44,7 @@ from .serializers import (
     PublicProfileSerializer,
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
+    UsernameChangeSerializer,
 )
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -1489,6 +1490,49 @@ class UserChronicConditionsAPIView(APIView):
                 {"error": "An unexpected error occurred while updating conditions."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+USERNAME_CHANGE_COOLDOWN_DAYS = 30
+
+
+class UsernameChangeAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def put(self, request, *args, **kwargs):
+        from datetime import timedelta
+
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+
+        # Enforce cooldown
+        if profile.last_username_change:
+            available_at = profile.last_username_change + timedelta(
+                days=USERNAME_CHANGE_COOLDOWN_DAYS
+            )
+            if timezone.now() < available_at:
+                return Response(
+                    {
+                        "username": [
+                            f"You can change your username again after "
+                            f"{available_at.strftime('%B %d, %Y')}."
+                        ]
+                    },
+                    status=status.HTTP_429_TOO_MANY_REQUESTS,
+                )
+
+        serializer = UsernameChangeSerializer(
+            data=request.data, context={"request": request}
+        )
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        new_username = serializer.validated_data["username"]
+        request.user.username = new_username
+        request.user.save(update_fields=["username"])
+        profile.last_username_change = timezone.now()
+        profile.save(update_fields=["last_username_change"])
+
+        return Response({"username": new_username})
 
 
 class PublicProfileRetrieveView(APIView):

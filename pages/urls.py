@@ -6,6 +6,7 @@ from .views import (
     ProfileImageUpdateAPIView,
     get_user_details,
     UserChronicConditionsAPIView,
+    UsernameChangeAPIView,
     PublicProfileRetrieveView,
 )
 
@@ -19,6 +20,12 @@ urlpatterns = [
         "api/user/chronic-conditions/",
         UserChronicConditionsAPIView.as_view(),
         name="user_chronic_conditions_api",
+    ),
+    # API endpoint for changing username (30-day cooldown)
+    path(
+        "api/user/username/",
+        UsernameChangeAPIView.as_view(),
+        name="user_username_change",
     ),
     # API endpoint for fetching a user's public profile
     path(

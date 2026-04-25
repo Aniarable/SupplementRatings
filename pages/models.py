@@ -23,6 +23,7 @@ class Profile(models.Model):
     chronic_conditions = models.ManyToManyField(
         "Condition", blank=True, related_name="user_profiles"
     )
+    last_username_change = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.user.username} Profile"
