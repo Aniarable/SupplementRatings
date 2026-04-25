@@ -533,7 +533,7 @@ function SupplementsFeed() {
                                     onChange={(_, v) => setter(v)}
                                     isOptionEqualToValue={(o, v) => o.id === v.id}
                                     disableCloseOnSelect
-                                    sx={{ width: 115, flexShrink: 0 }}
+                                    sx={{ flex: 1, minWidth: 100 }}
                                     renderTags={(vals, getTagProps) =>
                                         vals.map((opt, i) => (
                                             <Chip
@@ -562,7 +562,7 @@ function SupplementsFeed() {
                                 placeholder="Search..."
                                 value={searchInput}
                                 onChange={handleSearchChange}
-                                sx={{ width: 110, flexShrink: 0 }}
+                                sx={{ flex: 1, minWidth: 90 }}
                                 InputProps={{
                                     startAdornment: (
                                         <InputAdornment position="start">
