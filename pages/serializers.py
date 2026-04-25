@@ -179,7 +179,6 @@ class RegisterUserSerializer(serializers.ModelSerializer):
 class BasicUserSerializer(serializers.ModelSerializer):
     profile_image_url = serializers.SerializerMethodField()
     chronic_conditions = serializers.SerializerMethodField()
-    comments = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -188,7 +187,6 @@ class BasicUserSerializer(serializers.ModelSerializer):
             "username",
             "profile_image_url",
             "chronic_conditions",
-            "comments",
         ]
 
     def get_profile_image_url(self, obj):
@@ -225,12 +223,6 @@ class BasicUserSerializer(serializers.ModelSerializer):
             conditions = obj.profile.chronic_conditions.all()
             return ConditionSerializer(conditions, many=True, context=self.context).data
         return []
-
-    def get_comments(self, obj):
-        comments_queryset = obj.comment_set.all()
-        return CommentSerializer(
-            comments_queryset, many=True, context=self.context
-        ).data
 
 
 class CommentSerializer(serializers.ModelSerializer):
