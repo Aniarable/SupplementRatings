@@ -472,11 +472,16 @@ function SupplementDetailPage() {
             // Refresh supplement data
             const refreshedData = await getSupplement(supplementId);
             setSupplement(refreshedData);
+            // If we were viewing a specific review and just edited it, update selectedReview
+            if (editingRating && selectedReview && editingRating.id === selectedReview.id) {
+                const updatedRating = refreshedData.ratings?.find(r => r.id === editingRating.id);
+                if (updatedRating) setSelectedReview(updatedRating);
+            }
             
         } catch (error) {
             toast.error(error.userMessage || 'Failed to submit rating. Please try again.');
         }
-    }, [selectedConditions, ratingScore, ratingTitle, ratingComment, supplement, selectedBenefits, selectedSideEffects, ratingDosage, ratingDialogDosageUnit, ratingDosageFrequency, ratingFrequencyUnit, selectedBrand, ratingImage, editingRating, resetFormState, supplementId]);
+    }, [selectedConditions, ratingScore, ratingTitle, ratingComment, supplement, selectedBenefits, selectedSideEffects, ratingDosage, ratingDialogDosageUnit, ratingDosageFrequency, ratingFrequencyUnit, selectedBrand, ratingImage, editingRating, resetFormState, supplementId, selectedReview]);
 
     if (loading) {
         return (
@@ -602,14 +607,7 @@ function SupplementDetailPage() {
                                 // Refresh supplement data to get updated comments
                                 getSupplement(supplementId).then(data => setSupplement(data));
                             }}
-                            onEditRating={(updatedRatingData, isTextOnlyUpdate) => {
-                                setSelectedReview(prev => ({...prev, ...updatedRatingData}));
-                                setSupplement(prevSup => ({
-                                    ...prevSup,
-                                    ratings: prevSup.ratings.map(r => r.id === updatedRatingData.id ? {...r, ...updatedRatingData} : r)
-                                }));
-                                console.log('Rating edited:', updatedRatingData);
-                            }}
+                            onEditRating={handleEditRating}
                             onCommentEdited={(updatedComment) => {
                                 // Refresh the supplement data to ensure all comment states are updated
                                 getSupplement(supplementId).then(data => {
