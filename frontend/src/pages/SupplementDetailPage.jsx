@@ -676,7 +676,7 @@ function SupplementDetailPage() {
                             fullWidth
                             multiline
                             rows={4}
-                            label="Comment"
+                            label="Your experience"
                             value={ratingComment}
                             onChange={(e) => setRatingComment(e.target.value)}
                             sx={{ mb: 2 }}
