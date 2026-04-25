@@ -408,6 +408,21 @@ class RatingViewSet(viewsets.ModelViewSet):
         category = self.request.query_params.get("category", None)
         if category:
             queryset = queryset.filter(supplement__category__iexact=category)
+        conditions_param = self.request.query_params.get("conditions", None)
+        if conditions_param:
+            names = [n.strip() for n in conditions_param.split(",") if n.strip()]
+            if names:
+                queryset = queryset.filter(conditions__name__in=names).distinct()
+        benefits_param = self.request.query_params.get("benefits", None)
+        if benefits_param:
+            names = [n.strip() for n in benefits_param.split(",") if n.strip()]
+            if names:
+                queryset = queryset.filter(benefits__name__in=names).distinct()
+        side_effects_param = self.request.query_params.get("side_effects", None)
+        if side_effects_param:
+            names = [n.strip() for n in side_effects_param.split(",") if n.strip()]
+            if names:
+                queryset = queryset.filter(side_effects__name__in=names).distinct()
         return queryset.prefetch_related(
             "conditions", "benefits", "side_effects", "comments"
         ).select_related("user", "supplement", "user__profile")

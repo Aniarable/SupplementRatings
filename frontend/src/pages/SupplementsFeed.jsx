@@ -33,7 +33,7 @@ import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import WhatshotIcon from '@mui/icons-material/Whatshot';
 import NewReleasesIcon from '@mui/icons-material/NewReleases';
 import StarIcon from '@mui/icons-material/Star';
-import { getFeed, upvoteRating, getCategories, getAllSupplements } from '../services/api';
+import { getFeed, upvoteRating, getCategories, getAllSupplements, getConditions } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { DEFAULT_PROFILE_IMAGE_URL } from '../config';
@@ -324,6 +324,10 @@ function SupplementsFeed() {
     const [searchInput, setSearchInput] = useState('');
     const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState('');
+    const [conditionOptions, setConditionOptions] = useState([]);
+    const [filterFor, setFilterFor] = useState([]);
+    const [filterHelped, setFilterHelped] = useState([]);
+    const [filterSideEffects, setFilterSideEffects] = useState([]);
     const sentinelRef = useRef(null);
 
     // Write-a-review dialog
@@ -366,18 +370,19 @@ function SupplementsFeed() {
         debouncedSetSearch(e.target.value);
     };
 
-    // Load categories for sidebar chips
+    // Load categories + conditions for filters
     useEffect(() => {
         getCategories().then(setCategories).catch(() => {});
+        getConditions('').then(data => setConditionOptions(Array.isArray(data) ? data : [])).catch(() => {});
     }, []);
 
-    // Reset + load when sort/search/category changes
+    // Reset + load when any filter changes
     useEffect(() => {
         setFeed([]);
         setOffset(0);
         setHasMore(true);
         loadPage(0, true);
-    }, [sort, search, selectedCategory]);
+    }, [sort, search, selectedCategory, filterFor, filterHelped, filterSideEffects]);
 
     const loadPage = useCallback(async (pageOffset, reset = false) => {
         if (reset) setLoading(true);
@@ -391,6 +396,9 @@ function SupplementsFeed() {
             };
             if (search) params.search = search;
             if (selectedCategory) params.category = selectedCategory;
+            if (filterFor.length) params.conditions = filterFor.map(c => c.name).join(',');
+            if (filterHelped.length) params.benefits = filterHelped.map(c => c.name).join(',');
+            if (filterSideEffects.length) params.side_effects = filterSideEffects.map(c => c.name).join(',');
 
             const data = await getFeed(params);
             const results = data.results || [];
@@ -404,7 +412,7 @@ function SupplementsFeed() {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [sort, search, selectedCategory]);
+    }, [sort, search, selectedCategory, filterFor, filterHelped, filterSideEffects]);
 
     // Infinite scroll via IntersectionObserver
     useEffect(() => {
@@ -518,6 +526,63 @@ function SupplementsFeed() {
                                 }}
                             />
                         </Paper>
+
+                        {/* Tag filters row */}
+                        {conditionOptions.length > 0 && (
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    display: 'flex',
+                                    gap: 1,
+                                    px: 2,
+                                    py: 1,
+                                    mb: 2,
+                                    border: theme => `1px solid ${theme.palette.divider}`,
+                                    borderRadius: 2,
+                                    flexWrap: 'wrap',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                {[
+                                    { label: 'For', value: filterFor, setter: setFilterFor, color: 'primary' },
+                                    { label: 'Helped with', value: filterHelped, setter: setFilterHelped, color: 'success' },
+                                    { label: 'Side effects', value: filterSideEffects, setter: setFilterSideEffects, color: 'error' },
+                                ].map(({ label, value, setter, color }) => (
+                                    <Autocomplete
+                                        key={label}
+                                        multiple
+                                        size="small"
+                                        options={conditionOptions}
+                                        getOptionLabel={o => o.name}
+                                        value={value}
+                                        onChange={(_, v) => setter(v)}
+                                        isOptionEqualToValue={(o, v) => o.id === v.id}
+                                        disableCloseOnSelect
+                                        sx={{ flex: 1, minWidth: 160 }}
+                                        renderTags={(vals, getTagProps) =>
+                                            vals.map((opt, i) => (
+                                                <Chip
+                                                    {...getTagProps({ index: i })}
+                                                    key={opt.id}
+                                                    label={opt.name}
+                                                    size="small"
+                                                    color={color}
+                                                    variant="outlined"
+                                                    sx={{ fontSize: '0.7rem', height: 20 }}
+                                                />
+                                            ))
+                                        }
+                                        renderInput={params => (
+                                            <TextField
+                                                {...params}
+                                                label={label}
+                                                placeholder={value.length ? '' : 'Any'}
+                                            />
+                                        )}
+                                    />
+                                ))}
+                            </Paper>
+                        )}
 
                         {/* Category pills (mobile — above feed) */}
                         {sortedCategories.length > 0 && (
