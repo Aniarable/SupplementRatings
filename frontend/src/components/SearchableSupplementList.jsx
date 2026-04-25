@@ -486,6 +486,7 @@ function SearchableSupplementList() {
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(true);
     const [batchSize, setBatchSize] = useState(20);
+    const [loadingMore, setLoadingMore] = useState(false);
     const sentinelRef = useRef(null);
     const [editingRating, setEditingRating] = useState(null);
     const [ratingDosage, setRatingDosage] = useState('');
@@ -1091,8 +1092,9 @@ function SearchableSupplementList() {
     };
 
     const handleLoadMore = async () => {
+        if (loadingMore) return;
         try {
-            setLoading(true);
+            setLoadingMore(true);
             const params = {
                 ...(currentSearch ? { search: currentSearch } : {}),
                 ...(selectedFilterCategory ? { category: selectedFilterCategory } : {}),
@@ -1123,16 +1125,16 @@ function SearchableSupplementList() {
             console.error('Error loading more supplements:', error);
             toast.error('Failed to load more supplements');
         } finally {
-            setLoading(false);
+            setLoadingMore(false);
         }
     };
 
     // Infinite scroll
     useEffect(() => {
-        if (!sentinelRef.current || !hasMore || loading) return;
+        if (!sentinelRef.current || !hasMore || loadingMore) return;
         const observer = new IntersectionObserver(
             (entries) => {
-                if (entries[0].isIntersecting && hasMore && !loading) {
+                if (entries[0].isIntersecting && hasMore && !loadingMore) {
                     handleLoadMore();
                 }
             },
@@ -1140,7 +1142,7 @@ function SearchableSupplementList() {
         );
         observer.observe(sentinelRef.current);
         return () => observer.disconnect();
-    }, [hasMore, loading, offset]);
+    }, [hasMore, loadingMore, offset]);
 
     const handleUpvoteRating = async (e, rating) => {
         e.stopPropagation(); // Prevent clicking into the review
@@ -1462,7 +1464,7 @@ function SearchableSupplementList() {
                         )}
                     </List>
                     <Box ref={sentinelRef} sx={{ py: 2, display: 'flex', justifyContent: 'center' }}>
-                        {loading && hasMore && <CircularProgress size={24} />}
+                        {loadingMore && <CircularProgress size={24} />}
                         {!hasMore && supplements.length > 0 && (
                             <Typography variant="caption" color="text.disabled">
                                 You've reached the end
