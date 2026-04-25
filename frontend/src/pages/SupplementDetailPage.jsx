@@ -335,42 +335,6 @@ function SupplementDetailPage() {
         setRatingDialogOpen(true);
     };
 
-    const resetFormState = useCallback(() => {
-        setRatingScore(1);
-        setRatingTitle('');
-        setRatingComment('');
-        setSelectedConditions([]);
-        setSelectedBenefits([]);
-        setSelectedSideEffects([]);
-        setRatingDosage('');
-        setRatingDialogDosageUnit(supplementDosageUnit || 'mg');
-        setSelectedBrand(null);
-        setRatingDosageFrequency('1');
-        setRatingFrequencyUnit('day');
-        setRatingImage(null);
-        setEditingRating(null);
-    }, [supplementDosageUnit]);
-
-    // Auto-open rating dialog when navigated here with openRatingDialog state.
-    // Must be declared AFTER resetFormState to avoid TDZ error in the deps array.
-    useEffect(() => {
-        if (openRatingDialog && !loading && supplement && !autoOpenDialogRef.current) {
-            autoOpenDialogRef.current = true;
-            resetFormState();
-            setRatingDialogOpen(true);
-        }
-    }, [openRatingDialog, loading, supplement, resetFormState]);
-
-    useEffect(() => {
-        if (openEditMode && ratingId && !loading && supplement && conditions.length > 0 && !autoOpenEditRef.current) {
-            const foundRating = supplement.ratings?.find(r => String(r.id) === String(ratingId));
-            if (foundRating) {
-                autoOpenEditRef.current = true;
-                handleEditRating(foundRating);
-            }
-        }
-    }, [openEditMode, ratingId, loading, supplement, conditions, handleEditRating]);
-
     const parseDosage = useCallback((dosageString) => {
         if (!dosageString) return { value: '', unit: 'mg' };
         const match = dosageString.match(/^(\d*\.?\d+)\s*([a-zA-Zμg]+)$/);
@@ -392,11 +356,11 @@ function SupplementDetailPage() {
         setRatingTitle(rating.title || '');
         setRatingComment(rating.comment || '');
         setRatingImage(null);
-        
+
         const parsedDosage = parseDosage(rating.dosage);
         setRatingDosage(parsedDosage.value);
         setRatingDialogDosageUnit(supplementDosageUnit || parsedDosage.unit);
-        
+
         setRatingDosageFrequency(rating.dosage_frequency || '1');
         setRatingFrequencyUnit(rating.frequency_unit || 'day');
 
@@ -406,9 +370,43 @@ function SupplementDetailPage() {
         } else {
             setSelectedBrand(null);
         }
-        
+
         setRatingDialogOpen(true);
     }, [conditions, brands, parseDosage, supplementDosageUnit]);
+
+    const resetFormState = useCallback(() => {
+        setRatingScore(1);
+        setRatingTitle('');
+        setRatingComment('');
+        setSelectedConditions([]);
+        setSelectedBenefits([]);
+        setSelectedSideEffects([]);
+        setRatingDosage('');
+        setRatingDialogDosageUnit(supplementDosageUnit || 'mg');
+        setSelectedBrand(null);
+        setRatingDosageFrequency('1');
+        setRatingFrequencyUnit('day');
+        setRatingImage(null);
+        setEditingRating(null);
+    }, [supplementDosageUnit]);
+
+    useEffect(() => {
+        if (openRatingDialog && !loading && supplement && !autoOpenDialogRef.current) {
+            autoOpenDialogRef.current = true;
+            resetFormState();
+            setRatingDialogOpen(true);
+        }
+    }, [openRatingDialog, loading, supplement, resetFormState]);
+
+    useEffect(() => {
+        if (openEditMode && ratingId && !loading && supplement && conditions.length > 0 && !autoOpenEditRef.current) {
+            const foundRating = supplement.ratings?.find(r => String(r.id) === String(ratingId));
+            if (foundRating) {
+                autoOpenEditRef.current = true;
+                handleEditRating(foundRating);
+            }
+        }
+    }, [openEditMode, ratingId, loading, supplement, conditions, handleEditRating]);
 
     const handleRatingSubmit = useCallback(async (e) => {
         if (e) {
@@ -891,9 +889,6 @@ function SupplementDetailPage() {
                         <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5, lineHeight: 1.3 }}>
                             {supplement.name}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2.5 }}>
-                            Check prices and reviews on Amazon
-                        </Typography>
                         <Button
                             href={amazonHref}
                             target="_blank"
@@ -917,7 +912,7 @@ function SupplementDetailPage() {
                             Buy on Amazon
                         </Button>
                         <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1.5, lineHeight: 1.5 }}>
-                            As an Amazon Associate we earn from qualifying purchases.
+                            Using our link costs you nothing extra and helps keep this site free.
                         </Typography>
                     </Paper>
                 </Box>

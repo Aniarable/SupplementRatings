@@ -144,9 +144,6 @@ export default function ReviewPage() {
                         <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5, lineHeight: 1.3 }}>
                             {rating.supplement_display}
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2.5 }}>
-                            Check prices and reviews on Amazon
-                        </Typography>
                         <Button
                             href={amazonHref}
                             target="_blank"
@@ -170,7 +167,7 @@ export default function ReviewPage() {
                             Buy on Amazon
                         </Button>
                         <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1.5, lineHeight: 1.5 }}>
-                            As an Amazon Associate we earn from qualifying purchases.
+                            Using our link costs you nothing extra and helps keep this site free.
                         </Typography>
                     </Paper>
                 </Box>
