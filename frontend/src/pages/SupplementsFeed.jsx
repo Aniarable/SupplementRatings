@@ -518,10 +518,10 @@ function SupplementsFeed() {
                             </ToggleButtonGroup>
 
                             {conditionOptions.length > 0 && [
-                                { label: 'For', value: filterFor, setter: setFilterFor, color: 'primary' },
-                                { label: 'Helped', value: filterHelped, setter: setFilterHelped, color: 'success' },
-                                { label: 'Side effects', value: filterSideEffects, setter: setFilterSideEffects, color: 'error' },
-                            ].map(({ label, value, setter, color }) => (
+                                { label: 'For', value: filterFor, setter: setFilterFor, color: 'primary', width: 82 },
+                                { label: 'Helped', value: filterHelped, setter: setFilterHelped, color: 'success', width: 105 },
+                                { label: 'Side effects', value: filterSideEffects, setter: setFilterSideEffects, color: 'error', width: 150 },
+                            ].map(({ label, value, setter, color, width }) => (
                                 <Autocomplete
                                     key={label}
                                     multiple
@@ -533,7 +533,7 @@ function SupplementsFeed() {
                                     onChange={(_, v) => setter(v)}
                                     isOptionEqualToValue={(o, v) => o.id === v.id}
                                     disableCloseOnSelect
-                                    sx={{ flex: 1, minWidth: 100 }}
+                                    sx={{ flexShrink: 0, width }}
                                     renderTags={(vals, getTagProps) =>
                                         vals.map((opt, i) => (
                                             <Chip
