@@ -19,13 +19,11 @@ class ErrorBoundary extends React.Component {
       return (
         <div style={{ padding: 32 }}>
           <h2>Something went wrong. Please try refreshing the page.</h2>
-          {import.meta.env.DEV && (
-            <pre style={{ background: '#fee', padding: 16, borderRadius: 4, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-              {this.state.error?.toString()}
-              {'\n\n'}
-              {this.state.error?.stack}
-            </pre>
-          )}
+          <pre style={{ background: '#fee', padding: 16, borderRadius: 4, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+            {this.state.error?.toString()}
+            {'\n\n'}
+            {this.state.error?.stack}
+          </pre>
         </div>
       );
     }
