@@ -23,7 +23,8 @@ import {
     Avatar,
     Chip,
     InputAdornment,
-    Link as MuiLink
+    Link as MuiLink,
+    CircularProgress
 } from '@mui/material';
 import { getSupplements, getSupplement, getConditions, getBrands, addRating, updateRating, upvoteRating, getCategories } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -485,6 +486,7 @@ function SearchableSupplementList() {
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(true);
     const [batchSize, setBatchSize] = useState(20);
+    const sentinelRef = useRef(null);
     const [editingRating, setEditingRating] = useState(null);
     const [ratingDosage, setRatingDosage] = useState('');
     const [ratingBrands, setRatingBrands] = useState('');
@@ -1125,19 +1127,20 @@ function SearchableSupplementList() {
         }
     };
 
-    const LoadMoreButton = () => (
-        hasMore && (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 4 }}>
-                <Button
-                    variant="outlined"
-                    onClick={handleLoadMore}
-                    disabled={loading}
-                >
-                    {loading ? 'Loading...' : 'Load More'}
-                </Button>
-            </Box>
-        )
-    );
+    // Infinite scroll
+    useEffect(() => {
+        if (!sentinelRef.current || !hasMore || loading) return;
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !loading) {
+                    handleLoadMore();
+                }
+            },
+            { threshold: 0.1 }
+        );
+        observer.observe(sentinelRef.current);
+        return () => observer.disconnect();
+    }, [hasMore, loading, offset]);
 
     const handleUpvoteRating = async (e, rating) => {
         e.stopPropagation(); // Prevent clicking into the review
@@ -1458,7 +1461,14 @@ function SearchableSupplementList() {
                             ))
                         )}
                     </List>
-                    <LoadMoreButton />
+                    <Box ref={sentinelRef} sx={{ py: 2, display: 'flex', justifyContent: 'center' }}>
+                        {loading && hasMore && <CircularProgress size={24} />}
+                        {!hasMore && supplements.length > 0 && (
+                            <Typography variant="caption" color="text.disabled">
+                                You've reached the end
+                            </Typography>
+                        )}
+                    </Box>
                     </Box>
                 </Box>
             ) : (
