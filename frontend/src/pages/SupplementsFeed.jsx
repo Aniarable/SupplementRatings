@@ -484,13 +484,13 @@ function SupplementsFeed() {
                             </MuiLink>
                         </Typography>
 
-                        {/* Sort + search bar row */}
+                        {/* Sort + search + tag filters — single bar */}
                         <Paper
                             elevation={0}
                             sx={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: 1.5,
+                                gap: 1,
                                 px: 2,
                                 py: 1,
                                 mb: 2,
@@ -507,7 +507,7 @@ function SupplementsFeed() {
                                 sx={{ flexShrink: 0 }}
                             >
                                 {SORT_OPTIONS.map(opt => (
-                                    <ToggleButton key={opt.value} value={opt.value} sx={{ gap: 0.5, px: 1.5 }}>
+                                    <ToggleButton key={opt.value} value={opt.value} sx={{ gap: 0.5, px: 1.25 }}>
                                         {opt.icon}
                                         <Typography variant="caption" fontWeight={600}>{opt.label}</Typography>
                                     </ToggleButton>
@@ -516,10 +516,10 @@ function SupplementsFeed() {
 
                             <TextField
                                 size="small"
-                                placeholder="Search reviews..."
+                                placeholder="Search..."
                                 value={searchInput}
                                 onChange={handleSearchChange}
-                                sx={{ flex: 1, minWidth: 160 }}
+                                sx={{ width: 130, flexShrink: 0 }}
                                 InputProps={{
                                     startAdornment: (
                                         <InputAdornment position="start">
@@ -528,64 +528,47 @@ function SupplementsFeed() {
                                     ),
                                 }}
                             />
-                        </Paper>
 
-                        {/* Tag filters row */}
-                        {conditionOptions.length > 0 && (
-                            <Paper
-                                elevation={0}
-                                sx={{
-                                    display: 'flex',
-                                    gap: 1,
-                                    px: 2,
-                                    py: 1,
-                                    mb: 2,
-                                    border: theme => `1px solid ${theme.palette.divider}`,
-                                    borderRadius: 2,
-                                    flexWrap: 'wrap',
-                                    alignItems: 'center',
-                                }}
-                            >
-                                {[
-                                    { label: 'For', value: filterFor, setter: setFilterFor, color: 'primary' },
-                                    { label: 'Helped with', value: filterHelped, setter: setFilterHelped, color: 'success' },
-                                    { label: 'Side effects', value: filterSideEffects, setter: setFilterSideEffects, color: 'error' },
-                                ].map(({ label, value, setter, color }) => (
-                                    <Autocomplete
-                                        key={label}
-                                        multiple
-                                        size="small"
-                                        options={conditionOptions}
-                                        getOptionLabel={o => o.name}
-                                        value={value}
-                                        onChange={(_, v) => setter(v)}
-                                        isOptionEqualToValue={(o, v) => o.id === v.id}
-                                        disableCloseOnSelect
-                                        sx={{ flex: 1, minWidth: 160 }}
-                                        renderTags={(vals, getTagProps) =>
-                                            vals.map((opt, i) => (
-                                                <Chip
-                                                    {...getTagProps({ index: i })}
-                                                    key={opt.id}
-                                                    label={opt.name}
-                                                    size="small"
-                                                    color={color}
-                                                    variant="outlined"
-                                                    sx={{ fontSize: '0.7rem', height: 20 }}
-                                                />
-                                            ))
-                                        }
-                                        renderInput={params => (
-                                            <TextField
-                                                {...params}
-                                                label={label}
-                                                placeholder={value.length ? '' : 'Any'}
+                            {conditionOptions.length > 0 && [
+                                { label: 'For', value: filterFor, setter: setFilterFor, color: 'primary' },
+                                { label: 'Helped', value: filterHelped, setter: setFilterHelped, color: 'success' },
+                                { label: 'Side effects', value: filterSideEffects, setter: setFilterSideEffects, color: 'error' },
+                            ].map(({ label, value, setter, color }) => (
+                                <Autocomplete
+                                    key={label}
+                                    multiple
+                                    limitTags={1}
+                                    size="small"
+                                    options={conditionOptions}
+                                    getOptionLabel={o => o.name}
+                                    value={value}
+                                    onChange={(_, v) => setter(v)}
+                                    isOptionEqualToValue={(o, v) => o.id === v.id}
+                                    disableCloseOnSelect
+                                    sx={{ width: 140, flexShrink: 0 }}
+                                    renderTags={(vals, getTagProps) =>
+                                        vals.map((opt, i) => (
+                                            <Chip
+                                                {...getTagProps({ index: i })}
+                                                key={opt.id}
+                                                label={opt.name}
+                                                size="small"
+                                                color={color}
+                                                variant="outlined"
+                                                sx={{ fontSize: '0.65rem', height: 18, maxWidth: 80 }}
                                             />
-                                        )}
-                                    />
-                                ))}
-                            </Paper>
-                        )}
+                                        ))
+                                    }
+                                    renderInput={params => (
+                                        <TextField
+                                            {...params}
+                                            label={label}
+                                            placeholder={value.length ? '' : 'Any'}
+                                        />
+                                    )}
+                                />
+                            ))}
+                        </Paper>
 
                         {/* Category pills (mobile — above feed) */}
                         {sortedCategories.length > 0 && (
