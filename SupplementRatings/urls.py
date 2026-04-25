@@ -37,6 +37,16 @@ router.register(r"brands", BrandViewSet, basename="brand")
 
 import traceback
 from rest_framework.response import Response
+from django.http import JsonResponse
+from django.db import connection as db_connection
+
+
+def health_check(request):
+    try:
+        db_connection.ensure_connection()
+        return JsonResponse({"status": "ok"})
+    except Exception as e:
+        return JsonResponse({"status": "error", "detail": str(e)}, status=503)
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -107,5 +117,6 @@ api_urlpatterns = [
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(api_urlpatterns)),
+    path("health/", health_check, name="health-check"),
     path("", include("pages.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
