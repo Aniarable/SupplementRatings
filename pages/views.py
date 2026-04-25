@@ -63,7 +63,8 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.db import IntegrityError
-from pages.throttles import RegisterRateThrottle
+from pages.throttles import RegisterRateThrottle, AuthRateThrottle
+from rest_framework.throttling import AnonRateThrottle
 from .permissions import IsOwnerOrReadOnly, IsOwnerOrAdmin
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -151,9 +152,12 @@ class SupplementViewSet(viewsets.ModelViewSet):
                 name.strip() for name in benefits_param.split(",") if name.strip()
             ]
             if benefit_names:
+                # Match ratings where the user tagged it as a benefit OR took it for that condition.
+                # The benefits M2M is optional so very few ratings have it filled in;
+                # conditions is required on every rating, making this filter actually useful.
                 rating_aggregation_q_filter &= Q(
                     ratings__benefits__name__in=benefit_names
-                )
+                ) | Q(ratings__conditions__name__in=benefit_names)
 
         side_effects_param = self.request.query_params.get("side_effects", None)
         if side_effects_param:
@@ -176,6 +180,12 @@ class SupplementViewSet(viewsets.ModelViewSet):
                 for bn in brand_names:
                     brand_q |= Q(ratings__brands__icontains=bn)
                 rating_aggregation_q_filter &= brand_q
+
+        # If any rating-level filters are active, restrict to supplements that have
+        # at least one matching rating (otherwise all 165 supplements return with
+        # rating_count=0 and the paginated results appear empty)
+        if rating_aggregation_q_filter:
+            queryset = queryset.filter(rating_aggregation_q_filter)
 
         # Annotate with filtered aggregations
         # The `filter` argument to Avg and Count applies to the related 'ratings' queryset
@@ -365,9 +375,16 @@ class RatingViewSet(viewsets.ModelViewSet):
                     f"Modified conditions in data: {data.getlist('conditions')}"
                 )
 
-        # Add the file if it exists
+        # Add the file if it exists, with MIME type validation
         if "image" in request.FILES:
-            data["image"] = request.FILES["image"]
+            img = request.FILES["image"]
+            allowed_mime = ("image/jpeg", "image/png", "image/gif", "image/webp")
+            if img.content_type not in allowed_mime:
+                return Response(
+                    {"error": "Only JPEG, PNG, GIF, and WebP images are allowed."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            data["image"] = img
 
         logger.warning(f"RatingViewSet create modified data: {data}")
 
@@ -824,7 +841,12 @@ def upload_supplements_csv(request):
         )
 
     csv_file = request.FILES["file"]
-    if not csv_file.name.endswith(".csv"):
+    if not csv_file.name.endswith(".csv") or csv_file.content_type not in (
+        "text/csv",
+        "application/csv",
+        "application/vnd.ms-excel",
+        "text/plain",
+    ):
         return Response(
             {"error": "File must be a CSV"}, status=status.HTTP_400_BAD_REQUEST
         )
@@ -953,7 +975,12 @@ def upload_conditions_csv(request):
         )
 
     csv_file = request.FILES["file"]
-    if not csv_file.name.endswith(".csv"):
+    if not csv_file.name.endswith(".csv") or csv_file.content_type not in (
+        "text/csv",
+        "application/csv",
+        "application/vnd.ms-excel",
+        "text/plain",
+    ):
         return Response(
             {"error": "File must be a CSV"}, status=status.HTTP_400_BAD_REQUEST
         )
@@ -1219,7 +1246,12 @@ def upload_brands_csv(request):
         )
 
     csv_file = request.FILES["file"]
-    if not csv_file.name.endswith(".csv"):
+    if not csv_file.name.endswith(".csv") or csv_file.content_type not in (
+        "text/csv",
+        "application/csv",
+        "application/vnd.ms-excel",
+        "text/plain",
+    ):
         return Response(
             {"error": "File must be a CSV"}, status=status.HTTP_400_BAD_REQUEST
         )
@@ -1326,10 +1358,18 @@ class ProfileImageUpdateAPIView(APIView):
                 {"error": "No image file provided."}, status=status.HTTP_400_BAD_REQUEST
             )
 
+        image_file = request.FILES["image"]
+        allowed_mime = ("image/jpeg", "image/png", "image/gif", "image/webp")
+        if image_file.content_type not in allowed_mime:
+            return Response(
+                {"error": "Only JPEG, PNG, GIF, and WebP images are allowed."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         profile, created = Profile.objects.get_or_create(user=request.user)
 
         # Manually update the image and save the profile
-        profile.image = request.FILES["image"]
+        profile.image = image_file
         profile.save()
 
         # Return only the updated image URL
@@ -1422,10 +1462,10 @@ class UserChronicConditionsAPIView(APIView):
             )
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
-            # Ensure logger is defined if using it here, or fall back to print
-            # logger.error(f"Error updating chronic conditions for user {request.user.username}: {str(e)}")
-            print(
-                f"Error updating chronic conditions for user {request.user.username}: {str(e)}"
+            logger.error(
+                "Error updating chronic conditions for user %s: %s",
+                request.user.id,
+                str(e),
             )
             return Response(
                 {"error": "An unexpected error occurred while updating conditions."},
@@ -1474,6 +1514,7 @@ class PublicProfileRetrieveView(APIView):
 
 class PasswordResetRequestView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [AnonRateThrottle]
 
     def post(self, request, *args, **kwargs):
         serializer = PasswordResetRequestSerializer(data=request.data)

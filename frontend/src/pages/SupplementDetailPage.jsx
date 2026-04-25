@@ -31,6 +31,7 @@ import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import AddIcon from '@mui/icons-material/Add';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { IconButton } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
@@ -500,12 +501,22 @@ function SupplementDetailPage() {
         );
     }
 
+    const amazonHref = `https://www.amazon.com/s?linkCode=ll2&tag=supplementrat-20&language=en_US&ref_=as_li_ss_tl&k=${encodeURIComponent(supplement.name)}`;
+
     return (
-        <Box sx={{ maxWidth: 800, mx: 'auto', p: 3 }}>
-            {/* Search Bar - Always visible at top */}
-            <Box sx={{ 
-                display: 'flex', 
-                gap: { xs: 1.5, sm: 2 }, 
+        <Container maxWidth="lg" sx={{ py: 3 }}>
+            <Box sx={{ display: 'flex', gap: 4, alignItems: 'flex-start' }}>
+
+                {/* Phantom left spacer — mirrors sidebar to keep main content centered */}
+                <Box sx={{ width: 240, flexShrink: 0, display: { xs: 'none', md: 'block' } }} />
+
+                {/* Main content */}
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+
+            {/* Search Bar */}
+            <Box sx={{
+                display: 'flex',
+                gap: { xs: 1.5, sm: 2 },
                 mb: 3,
                 flexDirection: { xs: 'column', sm: 'row' },
                 alignItems: { xs: 'stretch', sm: 'center' }
@@ -529,20 +540,17 @@ function SupplementDetailPage() {
                 </Button>
             </Box>
 
-            <Button 
+            <Button
                 onClick={() => navigate('/supplements')}
                 sx={{ mb: 2 }}
             >
                 Back to List
             </Button>
-            
+
             <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 2, mb: 1, flexWrap: 'wrap' }}>
-                    <Typography variant="h5">
-                        {supplement.name}
-                    </Typography>
-                    <AmazonLink supplementName={supplement.name} />
-                </Box>
+                <Typography variant="h5" sx={{ mb: 1 }}>
+                    {supplement.name}
+                </Typography>
 
                 {supplement.description && (
                     <Typography
@@ -800,7 +808,7 @@ function SupplementDetailPage() {
                                     type="number"
                                     variant="outlined"
                                     value={ratingDosage}
-                                    onChange={(e) => setRatingDosage(e.target.value)}
+                                    onChange={(e) => { const v = e.target.value; setRatingDosage(v === '' ? '' : String(Math.max(0, parseFloat(v) || 0))); }}
                                     sx={{ width: { xs: '100%', sm: '256px' } }}
                                     placeholder="e.g., 500"
                                     InputProps={{
@@ -815,7 +823,7 @@ function SupplementDetailPage() {
                                         type="number"
                                         variant="outlined"
                                         value={ratingDosage}
-                                        onChange={(e) => setRatingDosage(e.target.value)}
+                                        onChange={(e) => { const v = e.target.value; setRatingDosage(v === '' ? '' : String(Math.max(0, parseFloat(v) || 0))); }}
                                         sx={{ width: { xs: '100%', sm: '120px' } }}
                                         placeholder="e.g., 500"
                                         InputProps={{ inputProps: { min: 0 } }}
@@ -841,7 +849,7 @@ function SupplementDetailPage() {
                                 type="number"
                                 variant="outlined"
                                 value={ratingDosageFrequency}
-                                onChange={(e) => setRatingDosageFrequency(e.target.value)}
+                                onChange={(e) => { const v = e.target.value; setRatingDosageFrequency(v === '' ? '' : String(Math.max(1, parseFloat(v) || 1))); }}
                                 sx={{ width: { xs: '100%', sm: '90px' } }}
                                 placeholder="e.g., 2"
                                 InputProps={{ inputProps: { min: 1 } }}
@@ -880,7 +888,62 @@ function SupplementDetailPage() {
                     </Button>
                 </DialogActions>
             </Dialog>
-        </Box>
+
+                </Box>
+                {/* Right sidebar — desktop only */}
+                <Box sx={{
+                    width: 240,
+                    flexShrink: 0,
+                    position: 'sticky',
+                    top: 80,
+                    display: { xs: 'none', md: 'block' },
+                }}>
+                    <Paper
+                        elevation={3}
+                        sx={{
+                            p: 3,
+                            borderRadius: 3,
+                            background: 'linear-gradient(160deg, #fffdf9 0%, #fff 100%)',
+                            border: '1px solid',
+                            borderColor: 'divider',
+                        }}
+                    >
+                        <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5, lineHeight: 1.3 }}>
+                            {supplement.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2.5 }}>
+                            Check prices and reviews on Amazon
+                        </Typography>
+                        <Button
+                            href={amazonHref}
+                            target="_blank"
+                            rel="nofollow noopener noreferrer"
+                            component="a"
+                            fullWidth
+                            variant="outlined"
+                            endIcon={<OpenInNewIcon sx={{ fontSize: 15 }} />}
+                            sx={{
+                                color: '#c07a0a',
+                                borderColor: '#c07a0a',
+                                fontWeight: 600,
+                                textTransform: 'none',
+                                '&:hover': {
+                                    color: '#e47911',
+                                    borderColor: '#e47911',
+                                    bgcolor: '#fff8f0',
+                                },
+                            }}
+                        >
+                            Buy on Amazon
+                        </Button>
+                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1.5, lineHeight: 1.5 }}>
+                            As an Amazon Associate we earn from qualifying purchases.
+                        </Typography>
+                    </Paper>
+                </Box>
+
+            </Box>
+        </Container>
     );
 }
 

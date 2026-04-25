@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import { BannerProvider } from './context/BannerContext';
 import Login from './pages/Login';
 import Logout from './pages/Logout';
@@ -24,6 +25,9 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPasswordConfirm from './pages/ResetPasswordConfirm';
 import ReviewPage from './pages/ReviewPage';
 import SessionWarning from './components/SessionWarning';
+import AboutPage from './pages/AboutPage';
+import TermsPage from './pages/TermsPage';
+import PrivacyPage from './pages/PrivacyPage';
 import { useAuth } from './context/AuthContext';
 import { sessionManager } from './services/api';
 
@@ -110,8 +114,12 @@ function App() {
                 <Route path="/verify-email/:token" element={<EmailVerification />} />
                 <Route path="/accounts" element={<PrivateRoute><AccountsPage /></PrivateRoute>} />
                 <Route path="/profile/:username" element={<UserProfilePage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/terms" element={<TermsPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="*" element={<NotFound />} />
             </Routes>
+            <Footer />
         </BannerProvider>
     );
 }

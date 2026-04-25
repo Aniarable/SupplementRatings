@@ -16,6 +16,7 @@ import {
     DialogTitle,
     IconButton,
     InputAdornment,
+    Link as MuiLink,
     Paper,
     Rating,
     Skeleton,
@@ -456,10 +457,22 @@ function SupplementsFeed() {
                             size="large"
                             fullWidth
                             onClick={handleOpenWriteReview}
-                            sx={{ mb: 2, py: 1.25, fontWeight: 700, borderRadius: 2, fontSize: '1rem' }}
+                            sx={{ mb: 1, py: 1.25, fontWeight: 700, borderRadius: 2, fontSize: '1rem' }}
                         >
                             + Write a Review
                         </Button>
+
+                        {/* Medical disclaimer */}
+                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2, textAlign: 'center' }}>
+                            Reviews are personal opinions, not medical advice.{' '}
+                            <MuiLink component={RouterLink} to="/terms" underline="hover" color="inherit">
+                                Terms
+                            </MuiLink>
+                            {' · '}
+                            <MuiLink component={RouterLink} to="/privacy" underline="hover" color="inherit">
+                                Privacy
+                            </MuiLink>
+                        </Typography>
 
                         {/* Sort + search bar row */}
                         <Paper

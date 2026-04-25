@@ -97,6 +97,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "pages.middleware.SecurityHeadersMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -256,15 +257,6 @@ DEFAULT_FROM_EMAIL = config(
 EMAIL_USE_SSL = APP_EMAIL_USE_SSL
 EMAIL_USE_TLS = APP_EMAIL_USE_TLS
 
-print("--- DJANGO EMAIL SETTINGS DEBUG ---")
-print(f"EMAIL_BACKEND: {EMAIL_BACKEND}")
-print(f"EMAIL_HOST: {EMAIL_HOST}")
-print(f"EMAIL_PORT: {EMAIL_PORT}")
-print(f"EMAIL_USE_SSL (from APP_EMAIL_USE_SSL): {EMAIL_USE_SSL}")
-print(f"EMAIL_USE_TLS (from APP_EMAIL_USE_TLS): {EMAIL_USE_TLS}")
-print(f"EMAIL_HOST_USER: {EMAIL_HOST_USER}")
-print("--- END DJANGO EMAIL SETTINGS DEBUG ---")
-
 
 # Determine if running in production
 IS_PRODUCTION = not DEBUG
@@ -307,6 +299,9 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+X_FRAME_OPTIONS = "DENY"
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+PASSWORD_RESET_TIMEOUT = 3600  # 1 hour
 
 # Password validation
 PASSWORD_HASHERS = [
@@ -368,5 +363,5 @@ LOGGING = {
 #     logging.error("UNCAUGHT EXCEPTION", exc_info=(exc_type, exc_value, tb))
 # sys.excepthook = _capture_all_exceptions
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100 MB
-FILE_UPLOAD_MAX_MEMORY_SIZE = 104857600  # 100 MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10 MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10 MB

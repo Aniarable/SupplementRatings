@@ -7,6 +7,7 @@ import {
   Button,
   IconButton,
   InputAdornment,
+  Link as MuiLink,
   TextField,
   Typography,
 } from '@mui/material';
@@ -182,6 +183,17 @@ function Signup() {
             >
               {loading ? 'Creating account...' : 'Create account'}
             </Button>
+
+            <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1.5, textAlign: 'center', lineHeight: 1.6 }}>
+              By creating an account you agree to our{' '}
+              <MuiLink component={Link} to="/terms" underline="hover" color="inherit">
+                Terms of Service
+              </MuiLink>
+              {' '}and{' '}
+              <MuiLink component={Link} to="/privacy" underline="hover" color="inherit">
+                Privacy Policy
+              </MuiLink>.
+            </Typography>
           </Box>
 
           {/* Login link */}

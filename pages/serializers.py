@@ -188,7 +188,6 @@ class BasicUserSerializer(serializers.ModelSerializer):
             "username",
             "profile_image_url",
             "chronic_conditions",
-            "is_staff",
             "comments",
         ]
 

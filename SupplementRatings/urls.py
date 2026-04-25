@@ -40,7 +40,7 @@ from rest_framework.response import Response
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
-    # throttle_classes = [AuthRateThrottle]
+    throttle_classes = [AuthRateThrottle]
 
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)

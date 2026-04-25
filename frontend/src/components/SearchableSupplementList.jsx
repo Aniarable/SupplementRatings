@@ -74,9 +74,6 @@ const FilterSidebar = ({
     conditions,
     selectedFilterConditions,
     setSelectedFilterConditions,
-    brands,
-    selectedFilterBrands,
-    setSelectedFilterBrands,
     selectedFilterDosage,
     setSelectedFilterDosage,
     selectedFilterDosageUnit,
@@ -102,13 +99,6 @@ const FilterSidebar = ({
         }
         return [];
     }, [categories]);
-
-    const sortedBrands = React.useMemo(() => {
-        if (Array.isArray(brands)) {
-            return [...brands].sort((a, b) => a.name.localeCompare(b.name));
-        }
-        return [];
-    }, [brands]);
 
     return (
         <Paper
@@ -174,26 +164,15 @@ const FilterSidebar = ({
                 sx={{ mb: 1 }}
             />
 
-            <Autocomplete
-                multiple
-                options={sortedBrands}
-                getOptionLabel={(option) => option.name}
-                value={selectedFilterBrands}
-                onChange={(_, newValue) => setSelectedFilterBrands(newValue)}
-                renderInput={(params) => (
-                    <TextField {...params} label="Brands" margin="normal" size="small" />
-                )}
-                sx={{ mb: 2 }}
-            />
-
             <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                 <TextField
                     label="Dosage"
                     type="number"
                     size="small"
                     value={selectedFilterDosage}
-                    onChange={(e) => setSelectedFilterDosage(e.target.value)}
+                    onChange={(e) => setSelectedFilterDosage(Math.max(0, parseFloat(e.target.value) || 0) || '')}
                     sx={{ flex: 1 }}
+                    inputProps={{ min: 0 }}
                 />
                 <Select
                     size="small"
@@ -215,8 +194,9 @@ const FilterSidebar = ({
                     type="number"
                     size="small"
                     value={selectedFilterFrequency}
-                    onChange={(e) => setSelectedFilterFrequency(e.target.value)}
+                    onChange={(e) => setSelectedFilterFrequency(Math.max(1, parseFloat(e.target.value) || 1) || '')}
                     sx={{ flex: 1 }}
+                    inputProps={{ min: 1 }}
                 />
                 <Select
                     size="small"
@@ -491,7 +471,6 @@ function SearchableSupplementList() {
     const [selectedFilterConditions, setSelectedFilterConditions] = useState([]);
     const [selectedFilterBenefits, setSelectedFilterBenefits] = useState([]);
     const [selectedFilterSideEffects, setSelectedFilterSideEffects] = useState([]);
-    const [selectedFilterBrands, setSelectedFilterBrands] = useState([]);
     const [selectedFilterDosage, setSelectedFilterDosage] = useState('');
     const [selectedFilterDosageUnit, setSelectedFilterDosageUnit] = useState('mg');
     const [selectedFilterFrequency, setSelectedFilterFrequency] = useState('');
@@ -673,9 +652,6 @@ function SearchableSupplementList() {
                     ...(selectedFilterSideEffects.length > 0 ? {
                         side_effects: selectedFilterSideEffects.map(se => se.name).join(',')
                     } : {}),
-                    ...(selectedFilterBrands.length > 0 ? {
-                        brands: selectedFilterBrands.map(b => b.name).join(',')
-                    } : {}),
                     ...(debouncedFilterDosage ? {
                         dosage: `${debouncedFilterDosage}${selectedFilterDosageUnit}`
                     } : {}),
@@ -698,7 +674,7 @@ function SearchableSupplementList() {
             }
         };
         fetchSupplements();
-    }, [currentSearch, selectedFilterCategory, selectedFilterConditions, selectedFilterBrands, debouncedFilterDosage, selectedFilterDosageUnit, debouncedFilterFrequency, selectedFilterFrequencyUnit, selectedSortBy, selectedFilterBenefits, selectedFilterSideEffects]);
+    }, [currentSearch, selectedFilterCategory, selectedFilterConditions, debouncedFilterDosage, selectedFilterDosageUnit, debouncedFilterFrequency, selectedFilterFrequencyUnit, selectedSortBy, selectedFilterBenefits, selectedFilterSideEffects]);
 
     useEffect(() => {
         const fetchConditions = async () => {
@@ -795,7 +771,6 @@ function SearchableSupplementList() {
             let ratingCount = data.rating_count;
             
             if (selectedFilterConditions.length > 0 ||
-                selectedFilterBrands.length > 0 ||
                 selectedFilterDosage ||
                 selectedFilterFrequency) {
 
@@ -806,18 +781,6 @@ function SearchableSupplementList() {
                         if (!rating.condition_names.some(condition =>
                             conditionNames.includes(condition.toLowerCase())
                         )) {
-                            return false;
-                        }
-                    }
-
-                    // Check brands filter (support ratings with comma-separated brand names)
-                    if (selectedFilterBrands.length > 0) {
-                        const selectedBrandNames = new Set(selectedFilterBrands.map(b => (b.name || '').trim().toLowerCase()));
-                        const ratingBrandNames = String(rating.brands || '')
-                            .split(',')
-                            .map(n => n.trim().toLowerCase())
-                            .filter(Boolean);
-                        if (ratingBrandNames.length === 0 || !ratingBrandNames.some(n => selectedBrandNames.has(n))) {
                             return false;
                         }
                     }
@@ -865,7 +828,7 @@ function SearchableSupplementList() {
         } finally {
             setLoading(false);
         }
-    }, [selectedFilterConditions, selectedFilterBrands, selectedFilterDosage, selectedFilterFrequency, selectedFilterDosageUnit, selectedFilterFrequencyUnit]);
+    }, [selectedFilterConditions, selectedFilterDosage, selectedFilterFrequency, selectedFilterDosageUnit, selectedFilterFrequencyUnit]);
 
     const handleBackToList = async () => {
         try {
@@ -881,9 +844,6 @@ function SearchableSupplementList() {
                 } : {}),
                 ...(selectedFilterSideEffects.length > 0 ? {
                     side_effects: selectedFilterSideEffects.map(se => se.name).join(',')
-                } : {}),
-                ...(selectedFilterBrands.length > 0 ? {
-                    brands: selectedFilterBrands.map(b => b.name).join(',')
                 } : {}),
                 ...(selectedFilterDosage ? {
                     dosage: `${selectedFilterDosage}${selectedFilterDosageUnit}`
@@ -1072,7 +1032,6 @@ function SearchableSupplementList() {
         setSelectedFilterConditions([]);
         setSelectedFilterBenefits([]);
         setSelectedFilterSideEffects([]);
-        setSelectedFilterBrands([]);
         setSelectedFilterDosage('');
         setSelectedFilterDosageUnit('mg');
         setSelectedFilterFrequency('');
@@ -1143,9 +1102,6 @@ function SearchableSupplementList() {
                 } : {}),
                 ...(selectedFilterSideEffects.length > 0 ? {
                     side_effects: selectedFilterSideEffects.map(se => se.name).join(',')
-                } : {}),
-                ...(selectedFilterBrands.length > 0 ? {
-                    brands: selectedFilterBrands.map(b => b.name).join(',')
                 } : {}),
                 ...(selectedFilterDosage ? {
                     dosage: `${selectedFilterDosage}${selectedFilterDosageUnit}`
@@ -1408,9 +1364,6 @@ function SearchableSupplementList() {
                             conditions={conditions}
                             selectedFilterConditions={selectedFilterConditions}
                             setSelectedFilterConditions={setSelectedFilterConditions}
-                            brands={brands}
-                            selectedFilterBrands={selectedFilterBrands}
-                            setSelectedFilterBrands={setSelectedFilterBrands}
                             selectedFilterDosage={selectedFilterDosage}
                             setSelectedFilterDosage={setSelectedFilterDosage}
                             selectedFilterDosageUnit={selectedFilterDosageUnit}
@@ -1446,11 +1399,15 @@ function SearchableSupplementList() {
                     <List>
                         {loading ? (
                             <LoadingSkeleton />
+                        ) : supplements.length === 0 ? (
+                            <Box sx={{ textAlign: 'center', py: 6 }}>
+                                <Typography color="text.secondary">No supplements found for the selected filters.</Typography>
+                            </Box>
                         ) : (
                             supplements.map((supplement) => (
                                 <ListItem 
                                     key={supplement.id}
-                                    onClick={() => handleSupplementClick(supplement.id)}
+                                    onClick={() => navigate(`/supplements/${supplement.id}`)}
                                     sx={{
                                         mb: 1.25,
                                         cursor: 'pointer',
@@ -1790,7 +1747,7 @@ function SearchableSupplementList() {
                                     type="number"
                                     variant="outlined"
                                     value={ratingDosage}
-                                    onChange={(e) => setRatingDosage(e.target.value)}
+                                    onChange={(e) => { const v = e.target.value; setRatingDosage(v === '' ? '' : String(Math.max(0, parseFloat(v) || 0))); }}
                                     sx={{ width: { xs: '100%', sm: '256px' } }}
                                     placeholder="e.g., 500"
                                     InputProps={{
@@ -1805,7 +1762,7 @@ function SearchableSupplementList() {
                                         type="number"
                                         variant="outlined"
                                         value={ratingDosage}
-                                        onChange={(e) => setRatingDosage(e.target.value)}
+                                        onChange={(e) => { const v = e.target.value; setRatingDosage(v === '' ? '' : String(Math.max(0, parseFloat(v) || 0))); }}
                                         sx={{ width: { xs: '100%', sm: '120px' } }}
                                         placeholder="e.g., 500"
                                         InputProps={{ inputProps: { min: 0 } }}
@@ -1842,7 +1799,7 @@ function SearchableSupplementList() {
                                 type="number"
                                 variant="outlined"
                                 value={ratingDosageFrequency}
-                                onChange={(e) => setRatingDosageFrequency(e.target.value)}
+                                onChange={(e) => { const v = e.target.value; setRatingDosageFrequency(v === '' ? '' : String(Math.max(1, parseFloat(v) || 1))); }}
                                 sx={{ width: { xs: '100%', sm: '90px' } }}
                                 placeholder="e.g., 2"
                                 InputProps={{ inputProps: { min: 1 } }}
