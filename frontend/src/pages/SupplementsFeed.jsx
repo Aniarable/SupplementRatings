@@ -517,25 +517,10 @@ function SupplementsFeed() {
                                 ))}
                             </ToggleButtonGroup>
 
-                            <TextField
-                                size="small"
-                                placeholder="Search..."
-                                value={searchInput}
-                                onChange={handleSearchChange}
-                                sx={{ width: 110, flexShrink: 0 }}
-                                InputProps={{
-                                    startAdornment: (
-                                        <InputAdornment position="start">
-                                            <SearchIcon fontSize="small" />
-                                        </InputAdornment>
-                                    ),
-                                }}
-                            />
-
                             {conditionOptions.length > 0 && [
                                 { label: 'For', value: filterFor, setter: setFilterFor, color: 'primary' },
                                 { label: 'Helped', value: filterHelped, setter: setFilterHelped, color: 'success' },
-                                { label: 'Side fx', value: filterSideEffects, setter: setFilterSideEffects, color: 'error' },
+                                { label: 'Side effects', value: filterSideEffects, setter: setFilterSideEffects, color: 'error' },
                             ].map(({ label, value, setter, color }) => (
                                 <Autocomplete
                                     key={label}
@@ -571,6 +556,21 @@ function SupplementsFeed() {
                                     )}
                                 />
                             ))}
+
+                            <TextField
+                                size="small"
+                                placeholder="Search..."
+                                value={searchInput}
+                                onChange={handleSearchChange}
+                                sx={{ width: 110, flexShrink: 0 }}
+                                InputProps={{
+                                    startAdornment: (
+                                        <InputAdornment position="start">
+                                            <SearchIcon fontSize="small" />
+                                        </InputAdornment>
+                                    ),
+                                }}
+                            />
                         </Paper>
 
                         {/* Category pills (mobile — above feed) */}
