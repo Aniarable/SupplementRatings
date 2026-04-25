@@ -130,16 +130,20 @@ WSGI_APPLICATION = "SupplementRatings.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": config("DB_ENGINE", default="django.db.backends.postgresql"),
-        "NAME": config("DB_NAME", default="supplement_ratings_dev"),
-        "USER": config("DB_USER", default="myuser"),
-        "PASSWORD": config("DB_PASSWORD"),  # MUST be set in your .env file
-        "HOST": config("DB_HOST", default="localhost"),
-        "PORT": config("DB_PORT", default="5432"),
-    }
+_db_config = {
+    "ENGINE": config("DB_ENGINE", default="django.db.backends.postgresql"),
+    "NAME": config("DB_NAME", default="supplement_ratings_dev"),
+    "USER": config("DB_USER", default="myuser"),
+    "PASSWORD": config("DB_PASSWORD"),  # MUST be set in your .env file
+    "HOST": config("DB_HOST", default="localhost"),
+    "PORT": config("DB_PORT", default="5432"),
 }
+
+# RDS (and most managed Postgres) requires SSL; add sslmode when connecting to a remote host
+if _db_config["HOST"] not in ("localhost", "127.0.0.1", ""):
+    _db_config["OPTIONS"] = {"sslmode": "require"}
+
+DATABASES = {"default": _db_config}
 
 DEV_THROTTLE_RATES = {
     "anon": "10000/minute",
