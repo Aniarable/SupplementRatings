@@ -18,6 +18,7 @@ import {
     InputAdornment,
     Link as MuiLink,
     Paper,
+    Popper,
     Rating,
     Skeleton,
     TextField,
@@ -26,6 +27,11 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
+
+// Dropdown list is always at least 220 px wide regardless of input box size
+const WidePopper = (props) => (
+    <Popper {...props} style={{ ...props.style, minWidth: 220 }} placement="bottom-start" />
+);
 import SearchIcon from '@mui/icons-material/Search';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
@@ -533,6 +539,7 @@ function SupplementsFeed() {
                                     onChange={(_, v) => setter(v)}
                                     isOptionEqualToValue={(o, v) => o.id === v.id}
                                     disableCloseOnSelect
+                                    PopperComponent={WidePopper}
                                     sx={{ flexShrink: 0, width }}
                                     renderTags={(vals, getTagProps) =>
                                         vals.map((opt, i) => (
