@@ -26,9 +26,13 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
 
 class IsOwnerOrAdmin(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
-        # Admin can do anything
+        # Anyone can read
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        # Admin can write anything
         if request.user.is_staff:
             return True
 
-        # Owner can only access their own objects
+        # Owner can write their own objects
         return obj.user == request.user
