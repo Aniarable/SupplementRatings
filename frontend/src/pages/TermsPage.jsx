@@ -47,10 +47,19 @@ export default function TermsPage() {
                         or health regimen. Supplements may interact with prescription medications or
                         be contraindicated for certain health conditions.
                     </Typography>
-                    <Typography variant="body1" sx={{ lineHeight: 1.8 }}>
+                    <Typography variant="body1" sx={{ lineHeight: 1.8, mb: 2 }}>
                         SupplementRatings does not endorse any specific supplement, brand, or health
                         claim made by users on this Site. User reviews represent individual opinions
                         and personal experiences only.
+                    </Typography>
+                    <Typography variant="body1" sx={{ lineHeight: 1.8 }}>
+                        <strong>Condition and benefit tags are user-reported, not clinically verified.</strong>{' '}
+                        Labels such as "For: Anxiety," "Helped with: Sleep," or "Side effects: Nausea"
+                        reflect only what individual users chose to tag when submitting their review.
+                        They do not indicate that a supplement has been scientifically tested,
+                        clinically proven, or FDA-approved for any condition or purpose. No tag,
+                        rating, or review on this Site should be interpreted as evidence of efficacy
+                        or safety.
                     </Typography>
                 </Section>
 

@@ -302,6 +302,9 @@ function FeedCard({ rating, onUpvote, onDownvote, currentUser }) {
                                         </Box>
                                     ) : null
                                 )}
+                                <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.6rem', fontStyle: 'italic', mt: 0.25 }}>
+                                    User-reported, not proven
+                                </Typography>
                             </Box>
                         )}
                     </Box>

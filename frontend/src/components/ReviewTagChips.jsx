@@ -48,6 +48,9 @@ export default function ReviewTagChips({ conditionNames, benefitNames, sideEffec
                     </Box>
                 );
             })}
+            <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.65rem', fontStyle: 'italic', mt: 0.25 }}>
+                User-reported — not clinically proven
+            </Typography>
         </Box>
     );
 }
