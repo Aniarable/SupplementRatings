@@ -111,12 +111,12 @@ api_urlpatterns = [
     path("contact/", contact_message, name="contact-message"),
     path("auth/google/", google_login, name="google-login"),
     path("auth/google/client-id/", google_client_id, name="google-client-id"),
+    path("health/", health_check, name="health-check"),
     path("", include(router.urls)),
 ]
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(api_urlpatterns)),
-    path("health/", health_check, name="health-check"),
     path("", include("pages.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

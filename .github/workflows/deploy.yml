@@ -93,4 +93,4 @@ jobs:
             sudo systemctl restart gunicorn; \
             sudo systemctl reload nginx; \
             sleep 3; \
-            curl -sf http://localhost:8000/health/ || (echo 'Health check failed' && exit 1)"
+            curl -sf http://localhost/api/health/ || (echo 'Health check failed' && exit 1)"
