@@ -23,8 +23,7 @@ import {
     Avatar,
     Chip,
     InputAdornment,
-    Link as MuiLink,
-    CircularProgress
+    Link as MuiLink
 } from '@mui/material';
 import { getSupplements, getSupplement, getConditions, getBrands, addRating, updateRating, upvoteRating, getCategories } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -486,8 +485,6 @@ function SearchableSupplementList() {
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(true);
     const [batchSize, setBatchSize] = useState(20);
-    const [loadingMore, setLoadingMore] = useState(false);
-    const sentinelRef = useRef(null);
     const [editingRating, setEditingRating] = useState(null);
     const [ratingDosage, setRatingDosage] = useState('');
     const [ratingBrands, setRatingBrands] = useState('');
@@ -1092,9 +1089,8 @@ function SearchableSupplementList() {
     };
 
     const handleLoadMore = async () => {
-        if (loadingMore) return;
         try {
-            setLoadingMore(true);
+            setLoading(true);
             const params = {
                 ...(currentSearch ? { search: currentSearch } : {}),
                 ...(selectedFilterCategory ? { category: selectedFilterCategory } : {}),
@@ -1125,24 +1121,23 @@ function SearchableSupplementList() {
             console.error('Error loading more supplements:', error);
             toast.error('Failed to load more supplements');
         } finally {
-            setLoadingMore(false);
+            setLoading(false);
         }
     };
 
-    // Infinite scroll
-    useEffect(() => {
-        if (!sentinelRef.current || !hasMore || loadingMore) return;
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting && hasMore && !loadingMore) {
-                    handleLoadMore();
-                }
-            },
-            { threshold: 0.1 }
-        );
-        observer.observe(sentinelRef.current);
-        return () => observer.disconnect();
-    }, [hasMore, loadingMore, offset]);
+    const LoadMoreButton = () => (
+        hasMore && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 4 }}>
+                <Button
+                    variant="outlined"
+                    onClick={handleLoadMore}
+                    disabled={loading}
+                >
+                    {loading ? 'Loading...' : 'Load More'}
+                </Button>
+            </Box>
+        )
+    );
 
     const handleUpvoteRating = async (e, rating) => {
         e.stopPropagation(); // Prevent clicking into the review
@@ -1463,14 +1458,7 @@ function SearchableSupplementList() {
                             ))
                         )}
                     </List>
-                    <Box ref={sentinelRef} sx={{ py: 2, display: 'flex', justifyContent: 'center' }}>
-                        {loadingMore && <CircularProgress size={24} />}
-                        {!hasMore && supplements.length > 0 && (
-                            <Typography variant="caption" color="text.disabled">
-                                You've reached the end
-                            </Typography>
-                        )}
-                    </Box>
+                    <LoadMoreButton />
                     </Box>
                 </Box>
             ) : (
