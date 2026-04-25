@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Box } from '@mui/material';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { BannerProvider } from './context/BannerContext';
@@ -76,50 +77,54 @@ function App() {
 
     return (
         <BannerProvider>
-            <Navbar />
-            <ToastContainer
-                position="top-right"
-                autoClose={5000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                rtl={false}
-                pauseOnFocusLoss
-                draggable
-                pauseOnHover
-            />
-            <Toaster position="top-center" />
-            <SessionWarning
-                open={sessionWarningOpen}
-                onExtend={handleExtendSession}
-                onLogout={handleLogoutNow}
-                timeRemaining={sessionTimeRemaining}
-            />
-            <Routes>
-                <Route path="/" element={<Navigate to="/feed" replace />} />
-                <Route path="/feed" element={<SupplementsFeed />} />
-                <Route path="/supplements" element={<SearchableSupplementList />} />
-                <Route path="/supplements/:id" element={<SupplementDetailPage />} />
-                <Route path="/reviews/:ratingId" element={<ReviewPage />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/logout" element={<Logout />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password-confirm/:uidb64/:token" element={<ResetPasswordConfirm />} />
-                <Route path="/upload-supplements" element={<PrivateRoute adminOnly={true}><UploadCSV type="supplements" /></PrivateRoute>} />
-                <Route path="/upload-conditions" element={<PrivateRoute adminOnly={true}><UploadCSV type="conditions" /></PrivateRoute>} />
-                <Route path="/upload-brands" element={<PrivateRoute adminOnly={true}><UploadBrands /></PrivateRoute>} />
-                <Route path="/admin-dashboard" element={<PrivateRoute adminOnly={true}><AdminDashboard /></PrivateRoute>} />
-                <Route path="/verify-email/:token" element={<EmailVerification />} />
-                <Route path="/accounts" element={<PrivateRoute><AccountsPage /></PrivateRoute>} />
-                <Route path="/profile/:username" element={<UserProfilePage />} />
-                <Route path="/about" element={<AboutPage />} />
-                <Route path="/terms" element={<TermsPage />} />
-                <Route path="/privacy" element={<PrivacyPage />} />
-                <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Footer />
+            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                <Navbar />
+                <ToastContainer
+                    position="top-right"
+                    autoClose={5000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                />
+                <Toaster position="top-center" />
+                <SessionWarning
+                    open={sessionWarningOpen}
+                    onExtend={handleExtendSession}
+                    onLogout={handleLogoutNow}
+                    timeRemaining={sessionTimeRemaining}
+                />
+                <Box sx={{ flex: 1 }}>
+                    <Routes>
+                        <Route path="/" element={<Navigate to="/feed" replace />} />
+                        <Route path="/feed" element={<SupplementsFeed />} />
+                        <Route path="/supplements" element={<SearchableSupplementList />} />
+                        <Route path="/supplements/:id" element={<SupplementDetailPage />} />
+                        <Route path="/reviews/:ratingId" element={<ReviewPage />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/logout" element={<Logout />} />
+                        <Route path="/signup" element={<Signup />} />
+                        <Route path="/contact" element={<Contact />} />
+                        <Route path="/forgot-password" element={<ForgotPassword />} />
+                        <Route path="/reset-password-confirm/:uidb64/:token" element={<ResetPasswordConfirm />} />
+                        <Route path="/upload-supplements" element={<PrivateRoute adminOnly={true}><UploadCSV type="supplements" /></PrivateRoute>} />
+                        <Route path="/upload-conditions" element={<PrivateRoute adminOnly={true}><UploadCSV type="conditions" /></PrivateRoute>} />
+                        <Route path="/upload-brands" element={<PrivateRoute adminOnly={true}><UploadBrands /></PrivateRoute>} />
+                        <Route path="/admin-dashboard" element={<PrivateRoute adminOnly={true}><AdminDashboard /></PrivateRoute>} />
+                        <Route path="/verify-email/:token" element={<EmailVerification />} />
+                        <Route path="/accounts" element={<PrivateRoute><AccountsPage /></PrivateRoute>} />
+                        <Route path="/profile/:username" element={<UserProfilePage />} />
+                        <Route path="/about" element={<AboutPage />} />
+                        <Route path="/terms" element={<TermsPage />} />
+                        <Route path="/privacy" element={<PrivacyPage />} />
+                        <Route path="*" element={<NotFound />} />
+                    </Routes>
+                </Box>
+                <Footer />
+            </Box>
         </BannerProvider>
     );
 }
