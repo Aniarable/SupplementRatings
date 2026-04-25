@@ -405,6 +405,9 @@ class RatingViewSet(viewsets.ModelViewSet):
         supplement_id = self.request.query_params.get("supplement", None)
         if supplement_id:
             queryset = queryset.filter(supplement_id=supplement_id)
+        category = self.request.query_params.get("category", None)
+        if category:
+            queryset = queryset.filter(supplement__category__iexact=category)
         return queryset.prefetch_related(
             "conditions", "benefits", "side_effects", "comments"
         ).select_related("user", "supplement", "user__profile")

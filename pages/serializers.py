@@ -409,7 +409,7 @@ class RatingSerializer(serializers.ModelSerializer):
     condition_names = serializers.SerializerMethodField()
     benefit_names = serializers.SerializerMethodField()
     side_effect_names = serializers.SerializerMethodField()
-    comments = CommentSerializer(many=True, read_only=True)
+    comments = serializers.SerializerMethodField()
     has_upvoted = serializers.SerializerMethodField()
     has_downvoted = serializers.SerializerMethodField()
     conditions = serializers.PrimaryKeyRelatedField(
@@ -476,6 +476,10 @@ class RatingSerializer(serializers.ModelSerializer):
 
     def get_side_effect_names(self, obj):
         return [condition.name for condition in obj.side_effects.all()]
+
+    def get_comments(self, obj):
+        top_level = obj.comments.filter(parent_comment__isnull=True)
+        return CommentSerializer(top_level, many=True, context=self.context).data
 
     def get_image_url(self, obj):
         logger.warning(f"get_image_url: IS_PRODUCTION value: {settings.IS_PRODUCTION}")

@@ -13,7 +13,7 @@ import {
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import ReplyIcon from '@mui/icons-material/Reply';
-import { addComment, updateComment, upvoteRating, upvoteComment } from '../services/api';
+import { addComment, updateComment, upvoteRating, upvoteComment, deleteMyRating, deleteComment } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import ImageModal from './ImageModal';
@@ -27,7 +27,7 @@ const formatDate = (dateString) => {
 };
 
 // ─── Compact comment row ───────────────────────────────────────────────────────
-function CommentRow({ comment, currentUser, onEdit, onUpvote, onDownvote, onReply, depth = 0 }) {
+function CommentRow({ comment, currentUser, onEdit, onUpvote, onDownvote, onReply, onDelete, depth = 0 }) {
     const [editing, setEditing] = useState(false);
     const [editText, setEditText] = useState(comment.content ?? '');
     const [replyOpen, setReplyOpen] = useState(false);
@@ -96,6 +96,11 @@ function CommentRow({ comment, currentUser, onEdit, onUpvote, onDownvote, onRepl
                                 Edit
                             </Button>
                         )}
+                        {isOwn && !editing && (
+                            <Button size="small" color="error" sx={{ minWidth: 0, px: 0.5, fontSize: '0.68rem' }} onClick={() => onDelete && onDelete(comment.id)}>
+                                Delete
+                            </Button>
+                        )}
                     </Box>
                 </Box>
 
@@ -151,6 +156,7 @@ function CommentRow({ comment, currentUser, onEdit, onUpvote, onDownvote, onRepl
                         onUpvote={onUpvote}
                         onDownvote={onDownvote}
                         onReply={onReply}
+                        onDelete={onDelete}
                         depth={depth + 1}
                     />
                 ))}
@@ -160,7 +166,7 @@ function CommentRow({ comment, currentUser, onEdit, onUpvote, onDownvote, onRepl
 }
 
 // ─── Main component ────────────────────────────────────────────────────────────
-function ReviewDetail({ rating, onBack, onCommentAdded, onEditRating }) {
+function ReviewDetail({ rating, onBack, onCommentAdded, onEditRating, onRatingDeleted }) {
     const { user: currentUser } = useAuth();
     const location = useLocation();
     const [currentRating, setCurrentRating] = useState(rating);
@@ -181,6 +187,17 @@ function ReviewDetail({ rating, onBack, onCommentAdded, onEditRating }) {
             setCurrentRating(prev => ({ ...prev, upvotes: res.upvotes_count, downvotes: res.downvotes_count, has_upvoted: res.has_upvoted, has_downvoted: res.has_downvoted }));
         } catch {
             toast.error('Failed to vote');
+        }
+    };
+
+    const handleDeleteRating = async () => {
+        if (!window.confirm('Delete this review? This cannot be undone.')) return;
+        try {
+            await deleteMyRating(currentRating.id);
+            toast.success('Review deleted');
+            if (onRatingDeleted) onRatingDeleted();
+        } catch {
+            toast.error('Failed to delete review');
         }
     };
 
@@ -263,6 +280,26 @@ function ReviewDetail({ rating, onBack, onCommentAdded, onEditRating }) {
         }
     };
 
+    const removeCommentFromTree = (comments, id) =>
+        comments.reduce((acc, c) => {
+            if (c.id === id) return acc;
+            return [...acc, { ...c, replies: removeCommentFromTree(c.replies || [], id) }];
+        }, []);
+
+    const handleDeleteComment = async (commentId) => {
+        if (!window.confirm('Delete this comment?')) return;
+        try {
+            await deleteComment(commentId);
+            setCurrentRating(prev => ({
+                ...prev,
+                comments: removeCommentFromTree(prev.comments || [], commentId),
+            }));
+            toast.success('Comment deleted');
+        } catch {
+            toast.error('Failed to delete comment');
+        }
+    };
+
     if (!currentRating?.user) return null;
 
     const isOwnReview = currentUser && currentUser.id === currentRating.user.id;
@@ -304,6 +341,11 @@ function ReviewDetail({ rating, onBack, onCommentAdded, onEditRating }) {
                         {isOwnReview && onEditRating && (
                             <Button size="small" sx={{ ml: 0.5, fontSize: '0.72rem' }} onClick={() => onEditRating(currentRating)}>
                                 Edit
+                            </Button>
+                        )}
+                        {isOwnReview && (
+                            <Button size="small" color="error" sx={{ ml: 0.5, fontSize: '0.72rem' }} onClick={handleDeleteRating}>
+                                Delete
                             </Button>
                         )}
                     </Box>
@@ -382,6 +424,7 @@ function ReviewDetail({ rating, onBack, onCommentAdded, onEditRating }) {
                             onUpvote={c => handleVoteComment(c, 'up')}
                             onDownvote={c => handleVoteComment(c, 'down')}
                             onReply={handleReply}
+                            onDelete={handleDeleteComment}
                             depth={0}
                         />
                     ))}

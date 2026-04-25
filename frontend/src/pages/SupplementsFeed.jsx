@@ -136,16 +136,15 @@ function FeedCard({ rating, onUpvote, onDownvote, currentUser }) {
                     <IconButton size="small" onClick={handleUpvote} color={rating.has_upvoted ? 'primary' : 'default'} sx={{ p: 0.5 }}>
                         <ThumbUpIcon fontSize="small" />
                     </IconButton>
-                    <Typography
-                        variant="caption"
-                        fontWeight={700}
-                        color={rating.has_upvoted ? 'primary.main' : rating.has_downvoted ? 'error.main' : 'text.secondary'}
-                    >
-                        {(rating.upvotes ?? 0) - (rating.downvotes ?? 0)}
+                    <Typography variant="caption" fontWeight={700} color={rating.has_upvoted ? 'primary.main' : 'text.secondary'}>
+                        {rating.upvotes ?? 0}
                     </Typography>
                     <IconButton size="small" onClick={handleDownvote} color={rating.has_downvoted ? 'error' : 'default'} sx={{ p: 0.5 }}>
                         <ThumbDownIcon fontSize="small" />
                     </IconButton>
+                    <Typography variant="caption" fontWeight={700} color={rating.has_downvoted ? 'error.main' : 'text.secondary'}>
+                        {rating.downvotes ?? 0}
+                    </Typography>
                     {isOwnPost && (
                         <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.6rem', mt: 0.5 }}>
                             yours

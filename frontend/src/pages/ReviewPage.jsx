@@ -119,6 +119,7 @@ export default function ReviewPage() {
                         onEditRating={handleEditRating}
                         onCommentAdded={handleCommentAdded}
                         onUpvoteRating={handleUpvoteRating}
+                        onRatingDeleted={() => navigate('/feed', { replace: true })}
                     />
                 </Box>
 

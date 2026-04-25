@@ -30,7 +30,6 @@ import { Link as RouterLink } from 'react-router-dom';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import AddIcon from '@mui/icons-material/Add';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { IconButton } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
@@ -219,8 +218,9 @@ function SupplementDetailPage() {
     const [searchCondition, setSearchCondition] = useState('');
     const { setCurrentSupplementName } = useBanner();
 
-    const { ratingId, commentId, openRatingDialog } = location.state || {};
+    const { ratingId, commentId, openRatingDialog, openEditMode } = location.state || {};
     const autoOpenDialogRef = useRef(false);
+    const autoOpenEditRef = useRef(false);
 
     const supplementDosageUnit = supplement?.dosage_unit;
 
@@ -360,6 +360,16 @@ function SupplementDetailPage() {
             setRatingDialogOpen(true);
         }
     }, [openRatingDialog, loading, supplement, resetFormState]);
+
+    useEffect(() => {
+        if (openEditMode && ratingId && !loading && supplement && conditions.length > 0 && !autoOpenEditRef.current) {
+            const foundRating = supplement.ratings?.find(r => String(r.id) === String(ratingId));
+            if (foundRating) {
+                autoOpenEditRef.current = true;
+                handleEditRating(foundRating);
+            }
+        }
+    }, [openEditMode, ratingId, loading, supplement, conditions, handleEditRating]);
 
     const parseDosage = useCallback((dosageString) => {
         if (!dosageString) return { value: '', unit: 'mg' };
@@ -507,38 +517,8 @@ function SupplementDetailPage() {
         <Container maxWidth="lg" sx={{ py: 3 }}>
             <Box sx={{ display: 'flex', gap: 4, alignItems: 'flex-start' }}>
 
-                {/* Phantom left spacer — mirrors sidebar to keep main content centered */}
-                <Box sx={{ width: 240, flexShrink: 0, display: { xs: 'none', md: 'block' } }} />
-
                 {/* Main content */}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-
-            {/* Search Bar */}
-            <Box sx={{
-                display: 'flex',
-                gap: { xs: 1.5, sm: 2 },
-                mb: 3,
-                flexDirection: { xs: 'column', sm: 'row' },
-                alignItems: { xs: 'stretch', sm: 'center' }
-            }}>
-                <TextField
-                    fullWidth
-                    label="Search Supplements"
-                    variant="outlined"
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Press Enter to search"
-                />
-                <Button
-                    variant="outlined"
-                    startIcon={<FilterListIcon />}
-                    onClick={handleFilterClick}
-                    sx={{ alignSelf: { xs: 'stretch', sm: 'auto' }, whiteSpace: 'nowrap' }}
-                >
-                    Filter
-                </Button>
-            </Box>
 
             <Button
                 onClick={() => navigate('/supplements')}
