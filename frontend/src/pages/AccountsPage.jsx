@@ -474,7 +474,7 @@ function AccountsPage() {
                                 key={rating.id} 
                                 elevation={1} 
                                 sx={{ mb: 2, p: 2, cursor: 'pointer', '&:hover': { backgroundColor: 'rgba(0,0,0,0.02)' } }}
-                                onClick={() => navigate(`/supplements/${rating.supplement}`, { state: { ratingId: rating.id } })}
+                                onClick={() => navigate(`/reviews/${rating.id}`)}
                             >
                                 <Typography variant="subtitle1" sx={{fontWeight: 'bold', color: 'primary.main'}}>
                                     {rating.supplement_display || 'Supplement Name Missing'} 
