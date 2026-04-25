@@ -490,13 +490,16 @@ function SupplementsFeed() {
                             sx={{
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: 1,
-                                px: 2,
-                                py: 1,
+                                gap: 0.75,
+                                px: 1.5,
+                                py: 0.75,
                                 mb: 2,
                                 border: theme => `1px solid ${theme.palette.divider}`,
                                 borderRadius: 2,
-                                flexWrap: 'wrap',
+                                flexWrap: 'nowrap',
+                                overflowX: 'auto',
+                                scrollbarWidth: 'none',
+                                '&::-webkit-scrollbar': { display: 'none' },
                             }}
                         >
                             <ToggleButtonGroup
@@ -507,7 +510,7 @@ function SupplementsFeed() {
                                 sx={{ flexShrink: 0 }}
                             >
                                 {SORT_OPTIONS.map(opt => (
-                                    <ToggleButton key={opt.value} value={opt.value} sx={{ gap: 0.5, px: 1.25 }}>
+                                    <ToggleButton key={opt.value} value={opt.value} sx={{ gap: 0.4, px: 1 }}>
                                         {opt.icon}
                                         <Typography variant="caption" fontWeight={600}>{opt.label}</Typography>
                                     </ToggleButton>
@@ -519,7 +522,7 @@ function SupplementsFeed() {
                                 placeholder="Search..."
                                 value={searchInput}
                                 onChange={handleSearchChange}
-                                sx={{ width: 130, flexShrink: 0 }}
+                                sx={{ width: 110, flexShrink: 0 }}
                                 InputProps={{
                                     startAdornment: (
                                         <InputAdornment position="start">
@@ -532,7 +535,7 @@ function SupplementsFeed() {
                             {conditionOptions.length > 0 && [
                                 { label: 'For', value: filterFor, setter: setFilterFor, color: 'primary' },
                                 { label: 'Helped', value: filterHelped, setter: setFilterHelped, color: 'success' },
-                                { label: 'Side effects', value: filterSideEffects, setter: setFilterSideEffects, color: 'error' },
+                                { label: 'Side fx', value: filterSideEffects, setter: setFilterSideEffects, color: 'error' },
                             ].map(({ label, value, setter, color }) => (
                                 <Autocomplete
                                     key={label}
@@ -545,7 +548,7 @@ function SupplementsFeed() {
                                     onChange={(_, v) => setter(v)}
                                     isOptionEqualToValue={(o, v) => o.id === v.id}
                                     disableCloseOnSelect
-                                    sx={{ width: 140, flexShrink: 0 }}
+                                    sx={{ width: 115, flexShrink: 0 }}
                                     renderTags={(vals, getTagProps) =>
                                         vals.map((opt, i) => (
                                             <Chip
@@ -555,7 +558,7 @@ function SupplementsFeed() {
                                                 size="small"
                                                 color={color}
                                                 variant="outlined"
-                                                sx={{ fontSize: '0.65rem', height: 18, maxWidth: 80 }}
+                                                sx={{ fontSize: '0.6rem', height: 18, maxWidth: 70 }}
                                             />
                                         ))
                                     }
