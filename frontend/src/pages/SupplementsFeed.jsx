@@ -490,7 +490,7 @@ function SupplementsFeed() {
                             </MuiLink>
                         </Typography>
 
-                        {/* Sort + search + tag filters — single bar */}
+                        {/* Row 1: Sort + Search */}
                         <Paper
                             elevation={0}
                             sx={{
@@ -499,13 +499,9 @@ function SupplementsFeed() {
                                 gap: 0.75,
                                 px: 1.5,
                                 py: 0.75,
-                                mb: 2,
+                                mb: 1,
                                 border: theme => `1px solid ${theme.palette.divider}`,
                                 borderRadius: 2,
-                                flexWrap: 'nowrap',
-                                overflowX: 'auto',
-                                scrollbarWidth: 'none',
-                                '&::-webkit-scrollbar': { display: 'none' },
                             }}
                         >
                             <ToggleButtonGroup
@@ -523,45 +519,12 @@ function SupplementsFeed() {
                                 ))}
                             </ToggleButtonGroup>
 
-                            {conditionOptions.length > 0 && [
-                                { label: 'For', value: filterFor, setter: setFilterFor, color: 'primary', width: 96 },
-                                { label: 'Helped', value: filterHelped, setter: setFilterHelped, color: 'success', width: 128 },
-                                { label: 'Side effects', value: filterSideEffects, setter: setFilterSideEffects, color: 'error', width: 158 },
-                            ].map(({ label, value, setter, color, width }) => (
-                                <Autocomplete
-                                    key={label}
-                                    multiple
-                                    limitTags={1}
-                                    size="small"
-                                    options={conditionOptions}
-                                    getOptionLabel={o => o.name}
-                                    value={value}
-                                    onChange={(_, v) => setter(v)}
-                                    isOptionEqualToValue={(o, v) => o.id === v.id}
-                                    disableCloseOnSelect
-                                    PopperComponent={WidePopper}
-                                    sx={{ flexShrink: 0, width }}
-                                    renderTags={() => null}
-                                    renderInput={params => (
-                                        <TextField
-                                            {...params}
-                                            label={value.length ? `${label} (${value.length})` : label}
-                                            placeholder=""
-                                            InputLabelProps={{
-                                                ...params.InputLabelProps,
-                                                sx: value.length ? { color: `${color}.main`, fontWeight: 600 } : {},
-                                            }}
-                                        />
-                                    )}
-                                />
-                            ))}
-
                             <TextField
                                 size="small"
-                                placeholder="Search..."
+                                placeholder="Search reviews..."
                                 value={searchInput}
                                 onChange={handleSearchChange}
-                                sx={{ flex: 1, minWidth: 90 }}
+                                sx={{ flex: 1 }}
                                 InputProps={{
                                     startAdornment: (
                                         <InputAdornment position="start">
@@ -571,6 +534,63 @@ function SupplementsFeed() {
                                 }}
                             />
                         </Paper>
+
+                        {/* Row 2: Tag filters */}
+                        {conditionOptions.length > 0 && (
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    px: 1.5,
+                                    py: 0.75,
+                                    mb: 2,
+                                    border: theme => `1px solid ${theme.palette.divider}`,
+                                    borderRadius: 2,
+                                }}
+                            >
+                                {[
+                                    { label: 'For', value: filterFor, setter: setFilterFor, color: 'primary' },
+                                    { label: 'Helped with', value: filterHelped, setter: setFilterHelped, color: 'success' },
+                                    { label: 'Side effects', value: filterSideEffects, setter: setFilterSideEffects, color: 'error' },
+                                ].map(({ label, value, setter, color }) => (
+                                    <Autocomplete
+                                        key={label}
+                                        multiple
+                                        limitTags={2}
+                                        size="small"
+                                        options={conditionOptions}
+                                        getOptionLabel={o => o.name}
+                                        value={value}
+                                        onChange={(_, v) => setter(v)}
+                                        isOptionEqualToValue={(o, v) => o.id === v.id}
+                                        disableCloseOnSelect
+                                        PopperComponent={WidePopper}
+                                        sx={{ flex: 1 }}
+                                        renderTags={(vals, getTagProps) =>
+                                            vals.map((opt, i) => (
+                                                <Chip
+                                                    {...getTagProps({ index: i })}
+                                                    key={opt.id}
+                                                    label={opt.name}
+                                                    size="small"
+                                                    color={color}
+                                                    variant="outlined"
+                                                />
+                                            ))
+                                        }
+                                        renderInput={params => (
+                                            <TextField
+                                                {...params}
+                                                label={label}
+                                                placeholder={value.length ? '' : 'Any'}
+                                            />
+                                        )}
+                                    />
+                                ))}
+                            </Paper>
+                        )}
 
                         {/* Category pills (mobile — above feed) */}
                         {sortedCategories.length > 0 && (
