@@ -88,6 +88,9 @@ export default function ReviewPage() {
         <Container maxWidth="lg" sx={{ py: 3 }}>
             <Box sx={{ display: 'flex', gap: 4, alignItems: 'flex-start' }}>
 
+                {/* Left spacer — partial balance against sidebar */}
+                <Box sx={{ width: 120, flexShrink: 0, display: { xs: 'none', md: 'block' } }} />
+
                 {/* Main content */}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
