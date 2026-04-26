@@ -390,6 +390,7 @@ function SupplementsFeed() {
         setFeed([]);
         setOffset(0);
         setHasMore(true);
+        window.scrollTo({ top: 0, behavior: 'instant' });
         loadPage(0, true);
     }, [sort, search, selectedCategory, filterFor, filterHelped, filterSideEffects]);
 
