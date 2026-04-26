@@ -524,9 +524,9 @@ function SupplementsFeed() {
                             </ToggleButtonGroup>
 
                             {conditionOptions.length > 0 && [
-                                { label: 'For', value: filterFor, setter: setFilterFor, color: 'primary', width: 82 },
-                                { label: 'Helped', value: filterHelped, setter: setFilterHelped, color: 'success', width: 105 },
-                                { label: 'Side effects', value: filterSideEffects, setter: setFilterSideEffects, color: 'error', width: 150 },
+                                { label: 'For', value: filterFor, setter: setFilterFor, color: 'primary', width: 96 },
+                                { label: 'Helped', value: filterHelped, setter: setFilterHelped, color: 'success', width: 128 },
+                                { label: 'Side effects', value: filterSideEffects, setter: setFilterSideEffects, color: 'error', width: 158 },
                             ].map(({ label, value, setter, color, width }) => (
                                 <Autocomplete
                                     key={label}
