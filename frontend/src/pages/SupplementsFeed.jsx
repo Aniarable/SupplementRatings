@@ -558,7 +558,7 @@ function SupplementsFeed() {
                                     <Autocomplete
                                         key={label}
                                         multiple
-                                        limitTags={2}
+                                        limitTags={1}
                                         size="small"
                                         options={conditionOptions}
                                         getOptionLabel={o => o.name}
@@ -573,6 +573,10 @@ function SupplementsFeed() {
                                             '& .MuiInputBase-root': {
                                                 flexWrap: 'nowrap',
                                                 overflow: 'hidden',
+                                            },
+                                            '& .MuiInputBase-root.Mui-focused': {
+                                                flexWrap: 'wrap',
+                                                overflow: 'visible',
                                             },
                                         }}
                                         renderTags={(vals, getTagProps) =>
