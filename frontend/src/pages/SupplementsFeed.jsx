@@ -337,6 +337,7 @@ function SupplementsFeed() {
     const [filterFor, setFilterFor] = useState([]);
     const [filterHelped, setFilterHelped] = useState([]);
     const [filterSideEffects, setFilterSideEffects] = useState([]);
+    const [filterSupplement, setFilterSupplement] = useState(null);
     const sentinelRef = useRef(null);
 
     // Write-a-review dialog
@@ -379,10 +380,11 @@ function SupplementsFeed() {
         debouncedSetSearch(e.target.value);
     };
 
-    // Load categories + conditions for filters
+    // Load categories, conditions, and supplements for filters
     useEffect(() => {
         getCategories().then(setCategories).catch(() => {});
         getConditions('').then(data => setConditionOptions(Array.isArray(data) ? data : [])).catch(() => {});
+        getAllSupplements().then(data => setSuppOptions(Array.isArray(data) ? data : [])).catch(() => {});
     }, []);
 
     // Build + fire a paginated request; `reset=true` replaces the feed, false appends.
@@ -397,6 +399,7 @@ function SupplementsFeed() {
                 offset: pageOffset,
             };
             if (search) params.search = search;
+            if (filterSupplement) params.supplement = filterSupplement.id;
             if (selectedCategory) params.category = selectedCategory;
             if (filterFor.length) params.conditions = filterFor.map(c => c.name).join(',');
             if (filterHelped.length) params.benefits = filterHelped.map(c => c.name).join(',');
@@ -414,7 +417,7 @@ function SupplementsFeed() {
             setLoading(false);
             setLoadingMore(false);
         }
-    }, [sort, search, selectedCategory, filterFor, filterHelped, filterSideEffects]);
+    }, [sort, search, filterSupplement, selectedCategory, filterFor, filterHelped, filterSideEffects]);
 
     // Reset + reload whenever filters/sort change.
     // Depend on loadPage (which encapsulates all filter state) so this effect always
@@ -524,6 +527,20 @@ function SupplementsFeed() {
                                     </ToggleButton>
                                 ))}
                             </ToggleButtonGroup>
+
+                            <Autocomplete
+                                size="small"
+                                options={suppOptions}
+                                getOptionLabel={o => o.name}
+                                value={filterSupplement}
+                                onChange={(_, v) => setFilterSupplement(v)}
+                                isOptionEqualToValue={(o, v) => o.id === v.id}
+                                PopperComponent={WidePopper}
+                                sx={{ width: 180, flexShrink: 0 }}
+                                renderInput={params => (
+                                    <TextField {...params} label="Supplement" placeholder="Any" />
+                                )}
+                            />
 
                             <TextField
                                 size="small"
