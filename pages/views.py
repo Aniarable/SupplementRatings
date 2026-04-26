@@ -425,9 +425,11 @@ class RatingViewSet(viewsets.ModelViewSet):
             names = [n.strip() for n in side_effects_param.split(",") if n.strip()]
             for name in names:
                 queryset = queryset.filter(side_effects__name=name)
-        return queryset.prefetch_related(
-            "conditions", "benefits", "side_effects", "comments"
-        ).select_related("user", "supplement", "user__profile")
+        return (
+            queryset.distinct()
+            .prefetch_related("conditions", "benefits", "side_effects", "comments")
+            .select_related("user", "supplement", "user__profile")
+        )
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()

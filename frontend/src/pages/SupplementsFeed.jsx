@@ -385,15 +385,7 @@ function SupplementsFeed() {
         getConditions('').then(data => setConditionOptions(Array.isArray(data) ? data : [])).catch(() => {});
     }, []);
 
-    // Reset + load when any filter changes
-    useEffect(() => {
-        setFeed([]);
-        setOffset(0);
-        setHasMore(true);
-        window.scrollTo({ top: 0, behavior: 'instant' });
-        loadPage(0, true);
-    }, [sort, search, selectedCategory, filterFor, filterHelped, filterSideEffects]);
-
+    // Build + fire a paginated request; `reset=true` replaces the feed, false appends.
     const loadPage = useCallback(async (pageOffset, reset = false) => {
         if (reset) setLoading(true);
         else setLoadingMore(true);
@@ -424,9 +416,22 @@ function SupplementsFeed() {
         }
     }, [sort, search, selectedCategory, filterFor, filterHelped, filterSideEffects]);
 
-    // Infinite scroll via IntersectionObserver
+    // Reset + reload whenever filters/sort change.
+    // Depend on loadPage (which encapsulates all filter state) so this effect always
+    // calls the version of loadPage that has the up-to-date filter values.
     useEffect(() => {
-        if (!sentinelRef.current || !hasMore || loadingMore) return;
+        setFeed([]);
+        setOffset(0);
+        setHasMore(true);
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        loadPage(0, true);
+    }, [loadPage]);
+
+    // Infinite scroll via IntersectionObserver.
+    // Skip setup while a reset-load is in progress (loading=true) to avoid a
+    // double-fetch right after a filter change clears the feed.
+    useEffect(() => {
+        if (!sentinelRef.current || !hasMore || loadingMore || loading) return;
         const observer = new IntersectionObserver(
             (entries) => {
                 if (entries[0].isIntersecting && hasMore && !loadingMore) {
@@ -437,7 +442,7 @@ function SupplementsFeed() {
         );
         observer.observe(sentinelRef.current);
         return () => observer.disconnect();
-    }, [hasMore, loadingMore, offset, loadPage]);
+    }, [hasMore, loadingMore, loading, offset, loadPage]);
 
     const handleVote = async (ratingId, voteType) => {
         try {
