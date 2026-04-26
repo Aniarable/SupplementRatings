@@ -567,7 +567,14 @@ function SupplementsFeed() {
                                         isOptionEqualToValue={(o, v) => o.id === v.id}
                                         disableCloseOnSelect
                                         PopperComponent={WidePopper}
-                                        sx={{ flex: 1 }}
+                                        sx={{
+                                            flex: '1 1 0',
+                                            minWidth: 0,
+                                            '& .MuiInputBase-root': {
+                                                flexWrap: 'nowrap',
+                                                overflow: 'hidden',
+                                            },
+                                        }}
                                         renderTags={(vals, getTagProps) =>
                                             vals.map((opt, i) => (
                                                 <Chip
@@ -578,7 +585,8 @@ function SupplementsFeed() {
                                                     color={color}
                                                     variant="outlined"
                                                     sx={{
-                                                        maxWidth: '100%',
+                                                        flexShrink: 1,
+                                                        minWidth: 0,
                                                         '& .MuiChip-label': {
                                                             overflow: 'hidden',
                                                             textOverflow: 'ellipsis',
