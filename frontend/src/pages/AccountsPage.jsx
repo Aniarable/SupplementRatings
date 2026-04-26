@@ -575,8 +575,13 @@ function AccountsPage() {
                                 sx={{ mb: 2, p: 2, cursor: 'pointer', '&:hover': { backgroundColor: 'rgba(0,0,0,0.02)' } }}
                                 onClick={() => navigate(`/reviews/${rating.id}`)}
                             >
-                                <Typography variant="subtitle1" sx={{fontWeight: 'bold', color: 'primary.main'}}>
-                                    {rating.supplement_display || 'Supplement Name Missing'} 
+                                {rating.title && (
+                                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', lineHeight: 1.3, mb: 0.25 }}>
+                                        {rating.title}
+                                    </Typography>
+                                )}
+                                <Typography variant="subtitle1" sx={{ fontWeight: rating.title ? 400 : 'bold', color: 'primary.main' }}>
+                                    {rating.supplement_display || 'Supplement Name Missing'}
                                 </Typography>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, mt: 0.5 }}>
                                     <MuiRating value={rating.score} readOnly size="small"/>
