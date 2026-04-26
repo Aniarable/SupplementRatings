@@ -577,6 +577,14 @@ function SupplementsFeed() {
                                                     size="small"
                                                     color={color}
                                                     variant="outlined"
+                                                    sx={{
+                                                        maxWidth: '100%',
+                                                        '& .MuiChip-label': {
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                            whiteSpace: 'nowrap',
+                                                        },
+                                                    }}
                                                 />
                                             ))
                                         }
