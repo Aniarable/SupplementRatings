@@ -541,24 +541,16 @@ function SupplementsFeed() {
                                     disableCloseOnSelect
                                     PopperComponent={WidePopper}
                                     sx={{ flexShrink: 0, width }}
-                                    renderTags={(vals, getTagProps) =>
-                                        vals.map((opt, i) => (
-                                            <Chip
-                                                {...getTagProps({ index: i })}
-                                                key={opt.id}
-                                                label={opt.name}
-                                                size="small"
-                                                color={color}
-                                                variant="outlined"
-                                                sx={{ fontSize: '0.6rem', height: 18, maxWidth: 70 }}
-                                            />
-                                        ))
-                                    }
+                                    renderTags={() => null}
                                     renderInput={params => (
                                         <TextField
                                             {...params}
-                                            label={label}
-                                            placeholder={value.length ? '' : 'Any'}
+                                            label={value.length ? `${label} (${value.length})` : label}
+                                            placeholder=""
+                                            InputLabelProps={{
+                                                ...params.InputLabelProps,
+                                                sx: value.length ? { color: `${color}.main`, fontWeight: 600 } : {},
+                                            }}
                                         />
                                     )}
                                 />

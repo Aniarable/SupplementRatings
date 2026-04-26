@@ -1,5 +1,28 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.contrib.sitemaps.views import sitemap
+from django.http import HttpResponse
+from pages.sitemaps import StaticSitemap, SupplementSitemap, ReviewSitemap
+
+sitemaps = {
+    "static": StaticSitemap,
+    "supplements": SupplementSitemap,
+    "reviews": ReviewSitemap,
+}
+
+
+def robots_txt(request):
+    lines = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /api/",
+        "Disallow: /admin/",
+        "",
+        f"Sitemap: https://supplementratings.com/sitemap.xml",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
+
+
 from rest_framework.routers import DefaultRouter
 from pages.views import (
     SupplementViewSet,
@@ -118,5 +141,7 @@ api_urlpatterns = [
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(api_urlpatterns)),
+    path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="sitemap"),
+    path("robots.txt", robots_txt, name="robots-txt"),
     path("", include("pages.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

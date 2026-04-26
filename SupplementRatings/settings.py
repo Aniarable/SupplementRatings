@@ -92,6 +92,7 @@ INSTALLED_APPS = [
     "django_filters",
     "pages.apps.PagesConfig",
     "storages",  # for handling file uploads
+    "django.contrib.sitemaps",
 ]
 
 MIDDLEWARE = [
