@@ -249,6 +249,44 @@ class SupplementViewSet(viewsets.ModelViewSet):
             SupplementSerializer(others, many=True, context={"request": request}).data
         )
 
+    @action(detail=False, methods=["get"], permission_classes=[AllowAny])
+    def top_rated(self, request):
+        """Return up to 10 supplements by average rating (min 3 ratings)."""
+        qs = (
+            Supplement.objects.annotate(
+                avg_r=Round(Avg("ratings__score"), 2, output_field=FloatField()),
+                cnt=Count("ratings__id", distinct=True),
+            )
+            .filter(cnt__gte=3)
+            .order_by("-avg_r", "-cnt")[:10]
+        )
+        return Response(
+            SupplementSerializer(qs, many=True, context={"request": request}).data
+        )
+
+    @action(detail=False, methods=["get"], permission_classes=[AllowAny])
+    def trending(self, request):
+        """Return up to 5 supplements with the most ratings in the last 7 days."""
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        since = timezone.now() - timedelta(days=7)
+        qs = (
+            Supplement.objects.annotate(
+                recent_count=Count(
+                    "ratings__id",
+                    filter=Q(ratings__created_at__gte=since),
+                    distinct=True,
+                )
+            )
+            .filter(recent_count__gt=0)
+            .order_by("-recent_count")[:5]
+        )
+        return Response(
+            SupplementSerializer(qs, many=True, context={"request": request}).data
+        )
+
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()  # The supplement to be deleted
 
@@ -1884,7 +1922,26 @@ class ReportView(APIView):
                 {"detail": "You have already reported this content."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        serializer.save(reporter=request.user)
+        report = serializer.save(reporter=request.user)
+        # Notify admin
+        try:
+            send_mail(
+                subject=f"[SupplementRatings] New report: {content_type} #{object_id}",
+                message=(
+                    f"A new report was submitted.\n\n"
+                    f"Reporter: {request.user.username} ({request.user.email})\n"
+                    f"Content type: {content_type}\n"
+                    f"Object ID: {object_id}\n"
+                    f"Reason: {serializer.validated_data.get('reason', 'N/A')}\n"
+                    f"Details: {serializer.validated_data.get('details', '')}\n\n"
+                    f"Review at: https://supplementratings.com/admin/pages/report/{report.id}/change/"
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=["kevinwongbarron@gmail.com"],
+                fail_silently=True,
+            )
+        except Exception:
+            pass
         return Response(
             {"detail": "Report submitted. Thank you."}, status=status.HTTP_201_CREATED
         )

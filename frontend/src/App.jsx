@@ -35,6 +35,7 @@ const PrivacyPage               = lazy(() => import('./pages/PrivacyPage'));
 const UploadCSV                 = lazy(() => import('./components/UploadCSV'));
 const UploadBrands              = lazy(() => import('./pages/UploadBrands'));
 const AdminDashboard            = lazy(() => import('./pages/AdminDashboard'));
+const TopRatedPage              = lazy(() => import('./pages/TopRatedPage'));
 
 function PageFallback() {
     return (
@@ -108,6 +109,7 @@ function App() {
                                 <Route path="/upload-conditions" element={<PrivateRoute adminOnly><UploadCSV type="conditions" /></PrivateRoute>} />
                                 <Route path="/upload-brands" element={<PrivateRoute adminOnly><UploadBrands /></PrivateRoute>} />
                                 <Route path="/admin-dashboard" element={<PrivateRoute adminOnly><AdminDashboard /></PrivateRoute>} />
+                                <Route path="/top-rated" element={<TopRatedPage />} />
                                 <Route path="*" element={<NotFound />} />
                             </Routes>
                         </Suspense>

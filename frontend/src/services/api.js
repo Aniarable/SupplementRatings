@@ -1059,4 +1059,22 @@ export const getAlsoReviewed = async (supplementId) => {
     }
 };
 
+export const getTopRated = async () => {
+    try {
+        const response = await API.get('supplements/top_rated/');
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const getTrending = async () => {
+    try {
+        const response = await API.get('supplements/trending/');
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export default API;

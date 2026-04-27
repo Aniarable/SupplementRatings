@@ -53,8 +53,15 @@ const formatDate = (dateString) => {
     return `${month}/${day}/${year}`;
 };
 
+const READ_MORE_THRESHOLD = 300;
+
 // Rating item component (simplified version from SearchableSupplementList)
 const SupplementRatingItem = ({ rating, handleReviewClick, user, handleEditRating }) => {
+    const [expanded, setExpanded] = useState(false);
+    const comment = rating.comment || '';
+    const isTruncatable = comment.length > READ_MORE_THRESHOLD;
+    const displayComment = isTruncatable && !expanded ? comment.slice(0, READ_MORE_THRESHOLD) + '...' : comment;
+
     return (
         <Paper 
             elevation={3} 
@@ -148,11 +155,20 @@ const SupplementRatingItem = ({ rating, handleReviewClick, user, handleEditRatin
                         Brands Used: {rating.brands}
                     </Typography>
                 )}
-                {rating.comment && 
+                {comment && (
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1, whiteSpace: 'pre-wrap' }}>
-                        {rating.comment}
+                        {displayComment}
+                        {isTruncatable && (
+                            <Button
+                                size="small"
+                                onClick={(e) => { e.stopPropagation(); setExpanded(prev => !prev); }}
+                                sx={{ ml: 0.5, p: 0, minWidth: 'auto', textTransform: 'none', fontSize: 'inherit', verticalAlign: 'baseline' }}
+                            >
+                                {expanded ? 'Read less' : 'Read more'}
+                            </Button>
+                        )}
                     </Typography>
-                }
+                )}
             </Box>
 
             {rating.image_url && (
@@ -967,6 +983,47 @@ function SupplementDetailPage() {
                             Using our link costs you nothing extra and helps keep this site free.
                         </Typography>
                     </Paper>
+
+                    {/* Dosage breakdown */}
+                    {(() => {
+                        const ratedDosages = (supplement.ratings || [])
+                            .map(r => {
+                                if (!r.dosage) return null;
+                                const m = r.dosage.match(/^(\d*\.?\d+)/);
+                                return m ? { value: parseFloat(m[1]), unit: r.dosage.replace(/^[\d.]+/, '').trim(), freq: r.frequency_unit } : null;
+                            })
+                            .filter(Boolean);
+                        if (ratedDosages.length === 0) return null;
+                        const sorted = [...ratedDosages].sort((a, b) => a.value - b.value);
+                        const mid = Math.floor(sorted.length / 2);
+                        const median = sorted.length % 2 === 0
+                            ? ((sorted[mid - 1].value + sorted[mid].value) / 2).toFixed(1)
+                            : sorted[mid].value;
+                        const medianUnit = sorted[mid].unit || '';
+                        const freqCounts = ratedDosages.reduce((acc, d) => {
+                            if (d.freq) acc[d.freq] = (acc[d.freq] || 0) + 1;
+                            return acc;
+                        }, {});
+                        const topFreq = Object.entries(freqCounts).sort((a, b) => b[1] - a[1])[0];
+                        return (
+                            <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+                                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                                    Dosage Breakdown
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary" display="block">
+                                    Median: <strong>{median}{medianUnit}</strong>
+                                </Typography>
+                                {topFreq && (
+                                    <Typography variant="caption" color="text.secondary" display="block">
+                                        Most common: <strong>{topFreq[1] === ratedDosages.length ? 'every' : `${topFreq[1]}/${ratedDosages.length} take`}</strong> per <strong>{topFreq[0]}</strong>
+                                    </Typography>
+                                )}
+                                <Typography variant="caption" color="text.disabled" display="block" sx={{ mt: 0.5 }}>
+                                    Based on {ratedDosages.length} report{ratedDosages.length !== 1 ? 's' : ''}
+                                </Typography>
+                            </Paper>
+                        );
+                    })()}
 
                     {alsoReviewed.length > 0 && (
                         <Paper

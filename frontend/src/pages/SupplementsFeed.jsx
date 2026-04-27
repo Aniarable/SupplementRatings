@@ -1,8 +1,8 @@
 // frontend/src/pages/SupplementsFeed.jsx
 // Reddit-style infinite-scroll feed of supplement reviews.
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { usePageMeta } from '../hooks/usePageMeta';
 import {
     Autocomplete,
@@ -40,7 +40,8 @@ import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import WhatshotIcon from '@mui/icons-material/Whatshot';
 import NewReleasesIcon from '@mui/icons-material/NewReleases';
 import StarIcon from '@mui/icons-material/Star';
-import { getFeed, upvoteRating, getCategories, getAllSupplements, getConditions } from '../services/api';
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
+import { getFeed, upvoteRating, getCategories, getAllSupplements, getConditions, getTrending } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { DEFAULT_PROFILE_IMAGE_URL } from '../config';
@@ -89,12 +90,18 @@ function FeedCardSkeleton() {
 
 function FeedCard({ rating, onUpvote, onDownvote, currentUser }) {
     const navigate = useNavigate();
-    const supplementId = rating.supplement;
     const supplementName = rating.supplement_display || 'Unknown Supplement';
     const canVote = currentUser && currentUser.id !== rating.user?.id;
     const isOwnPost = currentUser && currentUser.id === rating.user?.id;
 
-    const handleCardClick = () => navigate(`/reviews/${rating.id}`);
+    // Auto-collapse if heavily downvoted (downvotes > upvotes + 5)
+    const isControversial = (rating.downvotes ?? 0) > (rating.upvotes ?? 0) + 5;
+    const [collapsed, setCollapsed] = useState(isControversial);
+
+    const handleCardClick = () => {
+        sessionStorage.setItem('feedScrollY', String(window.scrollY));
+        navigate(`/reviews/${rating.id}`);
+    };
 
     const handleUpvote = (e) => {
         e.stopPropagation();
@@ -109,6 +116,34 @@ function FeedCard({ rating, onUpvote, onDownvote, currentUser }) {
         if (!canVote) return;
         onDownvote(rating.id);
     };
+
+    if (collapsed) {
+        return (
+            <Paper
+                elevation={0}
+                sx={{
+                    mb: 1.5,
+                    border: theme => `1px solid ${theme.palette.divider}`,
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                }}
+            >
+                <Box sx={{ px: 2, py: 1.25, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Typography variant="caption" color="text.disabled" sx={{ fontStyle: 'italic', flex: 1 }}>
+                        Controversial review hidden — {rating.downvotes ?? 0} downvotes
+                    </Typography>
+                    <Button
+                        size="small"
+                        variant="text"
+                        sx={{ textTransform: 'none', fontSize: '0.75rem', color: 'text.secondary' }}
+                        onClick={() => setCollapsed(false)}
+                    >
+                        Show anyway
+                    </Button>
+                </Box>
+            </Paper>
+        );
+    }
 
     return (
         <Paper
@@ -268,7 +303,6 @@ function FeedCard({ rating, onUpvote, onDownvote, currentUser }) {
                                     alignItems: 'flex-start',
                                 }}
                             >
-                                {/* Reusable chip style */}
                                 {[
                                     { label: 'For:', items: rating.condition_names, color: 'primary' },
                                     { label: 'Helped with:', items: rating.benefit_names, color: 'success' },
@@ -324,27 +358,61 @@ function FeedCard({ rating, onUpvote, onDownvote, currentUser }) {
 function SupplementsFeed() {
     const { user, isAuthenticated } = useAuth();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    // --- URL-backed filter state ---
+    const sort = searchParams.get('sort') || '-upvotes';
+    const search = searchParams.get('q') || '';
+    const selectedCategory = searchParams.get('cat') || '';
+    const filterSupplementId = searchParams.get('supp') || null;
+
+    // Local state for complex objects / debounce intermediary
+    const [searchInput, setSearchInput] = useState(search);
+    const [suppOptions, setSuppOptions] = useState([]);
+    const [conditionOptions, setConditionOptions] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [filterFor, setFilterFor] = useState([]);
+    const [filterHelped, setFilterHelped] = useState([]);
+    const [filterSideEffects, setFilterSideEffects] = useState([]);
+
+    // Resolve supplement object from URL id
+    const filterSupplement = useMemo(() => {
+        if (!filterSupplementId || suppOptions.length === 0) return null;
+        return suppOptions.find(s => String(s.id) === filterSupplementId) || null;
+    }, [filterSupplementId, suppOptions]);
+
+    // Feed data
     const [feed, setFeed] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [offset, setOffset] = useState(0);
-    const [sort, setSort] = useState('-upvotes');
-    const [search, setSearch] = useState('');
-    const [searchInput, setSearchInput] = useState('');
-    const [categories, setCategories] = useState([]);
-    const [selectedCategory, setSelectedCategory] = useState('');
-    const [conditionOptions, setConditionOptions] = useState([]);
-    const [filterFor, setFilterFor] = useState([]);
-    const [filterHelped, setFilterHelped] = useState([]);
-    const [filterSideEffects, setFilterSideEffects] = useState([]);
-    const [filterSupplement, setFilterSupplement] = useState(null);
     const sentinelRef = useRef(null);
+
+    // Scroll restoration — restore once after initial load
+    const scrollRestoredRef = useRef(false);
+    useEffect(() => {
+        if (!loading && !scrollRestoredRef.current) {
+            const savedY = sessionStorage.getItem('feedScrollY');
+            if (savedY) {
+                scrollRestoredRef.current = true;
+                sessionStorage.removeItem('feedScrollY');
+                requestAnimationFrame(() => {
+                    window.scrollTo({ top: parseInt(savedY, 10), behavior: 'instant' });
+                });
+            }
+        }
+    }, [loading]);
+
+    // Trending sidebar data
+    const [trending, setTrending] = useState([]);
+    useEffect(() => {
+        getTrending().then(data => setTrending(Array.isArray(data) ? data : [])).catch(() => {});
+    }, []);
 
     // Write-a-review dialog
     const [writeReviewOpen, setWriteReviewOpen] = useState(false);
     const [suppForReview, setSuppForReview] = useState(null);
-    const [suppOptions, setSuppOptions] = useState([]);
     const [suppOptionsLoading, setSuppOptionsLoading] = useState(false);
 
     const handleOpenWriteReview = async () => {
@@ -370,9 +438,16 @@ function SupplementsFeed() {
         navigate(`/supplements/${suppForReview.id}`, { state: { openRatingDialog: true } });
     };
 
-    // Debounce search
+    // Debounce search → URL
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const debouncedSetSearch = useCallback(
-        debounce((val) => setSearch(val), 350),
+        debounce((val) => {
+            setSearchParams(prev => {
+                const next = new URLSearchParams(prev);
+                if (val) next.set('q', val); else next.delete('q');
+                return next;
+            }, { replace: true });
+        }, 350),
         []
     );
 
@@ -380,6 +455,25 @@ function SupplementsFeed() {
         setSearchInput(e.target.value);
         debouncedSetSearch(e.target.value);
     };
+
+    // Helpers to update URL params
+    const setSort = (v) => setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        if (v && v !== '-upvotes') next.set('sort', v); else next.delete('sort');
+        return next;
+    }, { replace: true });
+
+    const setSelectedCategory = (v) => setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        if (v) next.set('cat', v); else next.delete('cat');
+        return next;
+    }, { replace: true });
+
+    const setFilterSupplement = (obj) => setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        if (obj) next.set('supp', String(obj.id)); else next.delete('supp');
+        return next;
+    }, { replace: true });
 
     // Load categories, conditions, and supplements for filters
     useEffect(() => {
@@ -421,19 +515,18 @@ function SupplementsFeed() {
     }, [sort, search, filterSupplement, selectedCategory, filterFor, filterHelped, filterSideEffects]);
 
     // Reset + reload whenever filters/sort change.
-    // Depend on loadPage (which encapsulates all filter state) so this effect always
-    // calls the version of loadPage that has the up-to-date filter values.
     useEffect(() => {
         setFeed([]);
         setOffset(0);
         setHasMore(true);
-        window.scrollTo({ top: 0, behavior: 'instant' });
+        // Only scroll to top if we're not about to restore a saved position
+        if (!sessionStorage.getItem('feedScrollY')) {
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        }
         loadPage(0, true);
     }, [loadPage]);
 
     // Infinite scroll via IntersectionObserver.
-    // Skip setup while a reset-load is in progress (loading=true) to avoid a
-    // double-fetch right after a filter change clears the feed.
     useEffect(() => {
         if (!sentinelRef.current || !hasMore || loadingMore || loading) return;
         const observer = new IntersectionObserver(
@@ -764,6 +857,50 @@ function SupplementsFeed() {
                                 </Box>
                             </Paper>
                         )}
+
+                        {/* Trending this week */}
+                        {trending.length > 0 && (
+                            <Paper
+                                elevation={0}
+                                sx={{ border: theme => `1px solid ${theme.palette.divider}`, borderRadius: 2 }}
+                            >
+                                <Box sx={{ px: 2, pt: 2, pb: 1.5 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1.25 }}>
+                                        <LocalFireDepartmentIcon fontSize="small" sx={{ color: 'error.main' }} />
+                                        <Typography variant="subtitle2" fontWeight={700}>
+                                            Popular this week
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                                        {trending.map((s, idx) => (
+                                            <Box key={s.id} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                <Typography variant="caption" color="text.disabled" sx={{ width: 16, flexShrink: 0, fontWeight: 700 }}>
+                                                    {idx + 1}
+                                                </Typography>
+                                                <RouterLink
+                                                    to={`/supplements/${s.id}`}
+                                                    style={{ textDecoration: 'none', color: 'inherit', flex: 1 }}
+                                                >
+                                                    <Typography
+                                                        variant="body2"
+                                                        sx={{ '&:hover': { textDecoration: 'underline', color: 'primary.main' }, transition: 'color 120ms' }}
+                                                    >
+                                                        {s.name}
+                                                    </Typography>
+                                                </RouterLink>
+                                            </Box>
+                                        ))}
+                                    </Box>
+                                </Box>
+                            </Paper>
+                        )}
+
+                        {/* Top Rated leaderboard link */}
+                        <Box sx={{ textAlign: 'center' }}>
+                            <MuiLink component={RouterLink} to="/top-rated" underline="hover" variant="caption" color="text.secondary">
+                                View Top Rated Supplements →
+                            </MuiLink>
+                        </Box>
                     </Box>
                 </Box>
             </Box>
