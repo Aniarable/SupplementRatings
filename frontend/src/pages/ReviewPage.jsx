@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { usePageMeta } from '../hooks/usePageMeta';
 import {
     Box,
     Button,
@@ -48,6 +48,25 @@ export default function ReviewPage() {
         fetchRating();
     }, [fetchRating]);
 
+    // Must be called unconditionally (before any early returns)
+    const pageTitle = rating
+        ? (rating.title ? `${rating.title} | SupplementRatings` : `${rating.user?.username}'s ${rating.supplement_display} Review | SupplementRatings`)
+        : null;
+    const metaDesc = rating
+        ? `${rating.user?.username} rated ${rating.supplement_display} ${rating.score}/5 stars.${rating.comment ? ' ' + rating.comment.slice(0, 130) : ''}`
+        : null;
+    const jsonLd = rating ? {
+        '@context': 'https://schema.org',
+        '@type': 'Review',
+        name: rating.title || `${rating.user?.username}'s review of ${rating.supplement_display}`,
+        author: { '@type': 'Person', name: rating.user?.username },
+        itemReviewed: { '@type': 'Product', name: rating.supplement_display },
+        reviewRating: { '@type': 'Rating', ratingValue: rating.score, bestRating: 5, worstRating: 1 },
+        reviewBody: rating.comment || '',
+        datePublished: rating.created_at?.split('T')[0],
+    } : null;
+    usePageMeta({ title: pageTitle, description: metaDesc, ldJson: jsonLd });
+
     const handleCommentAdded = async () => {
         const updated = await getRating(ratingId);
         setRating(updated);
@@ -87,22 +106,7 @@ export default function ReviewPage() {
     if (!rating) return null;
 
     const amazonHref = AMAZON_BASE + encodeURIComponent(rating.supplement_display);
-    const pageUrl = typeof window !== 'undefined' ? window.location.href : `https://supplementratings.com/reviews/${ratingId}`;
-    const pageTitle = rating.title
-        ? `${rating.title} | SupplementRatings`
-        : `${rating.user?.username}'s ${rating.supplement_display} Review | SupplementRatings`;
-    const metaDesc = `${rating.user?.username} rated ${rating.supplement_display} ${rating.score}/5 stars.${rating.comment ? ' ' + rating.comment.slice(0, 130) : ''}`;
-
-    const jsonLd = {
-        '@context': 'https://schema.org',
-        '@type': 'Review',
-        name: rating.title || `${rating.user?.username}'s review of ${rating.supplement_display}`,
-        author: { '@type': 'Person', name: rating.user?.username },
-        itemReviewed: { '@type': 'Product', name: rating.supplement_display },
-        reviewRating: { '@type': 'Rating', ratingValue: rating.score, bestRating: 5, worstRating: 1 },
-        reviewBody: rating.comment || '',
-        datePublished: rating.created_at?.split('T')[0],
-    };
+    const pageUrl = window.location.href;
 
     const handleShare = (platform) => {
         const encoded = encodeURIComponent(pageUrl);
@@ -118,14 +122,6 @@ export default function ReviewPage() {
 
     return (
         <Container maxWidth="lg" sx={{ py: 3 }}>
-            <Helmet>
-                <title>{pageTitle}</title>
-                <meta name="description" content={metaDesc} />
-                <meta property="og:title" content={pageTitle} />
-                <meta property="og:description" content={metaDesc} />
-                <meta property="og:url" content={pageUrl} />
-                <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-            </Helmet>
             <Box sx={{ display: 'flex', gap: 4, alignItems: 'flex-start' }}>
 
                 {/* Left spacer — partial balance against sidebar */}

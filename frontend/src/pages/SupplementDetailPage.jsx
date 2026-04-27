@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { usePageMeta } from '../hooks/usePageMeta';
 import { getSupplement, addRating, updateRating, getConditions, getBrands, getAlsoReviewed } from '../services/api';
 import ReviewDetail from '../components/ReviewDetail';
 import ImageUpload from '../components/ImageUpload';
@@ -492,6 +492,32 @@ function SupplementDetailPage() {
         }
     }, [selectedConditions, ratingScore, ratingTitle, ratingComment, supplement, selectedBenefits, selectedSideEffects, ratingDosage, ratingDialogDosageUnit, ratingDosageFrequency, ratingFrequencyUnit, selectedBrand, ratingImage, editingRating, resetFormState, supplementId, selectedReview]);
 
+    // Compute meta values (safe even when supplement is null — hook handles null values)
+    const _ratingCount = supplement?.ratings?.length || 0;
+    const _avgRating = _ratingCount > 0
+        ? (supplement.ratings.reduce((s, r) => s + r.score, 0) / _ratingCount).toFixed(1)
+        : null;
+    const _metaTitle = supplement ? `${supplement.name} Reviews | SupplementRatings` : null;
+    const _metaDesc = supplement
+        ? (supplement.description ? supplement.description.slice(0, 155) : `Read ${_ratingCount} user review${_ratingCount !== 1 ? 's' : ''} for ${supplement.name} on SupplementRatings.`)
+        : null;
+    const _jsonLd = supplement ? {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: supplement.name,
+        description: supplement.description || '',
+        ...(_avgRating && _ratingCount > 0 ? {
+            aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: _avgRating,
+                reviewCount: _ratingCount,
+                bestRating: 5,
+                worstRating: 1,
+            },
+        } : {}),
+    } : null;
+    usePageMeta({ title: _metaTitle, description: _metaDesc, ldJson: _jsonLd });
+
     if (loading) {
         return (
             <Box sx={{ maxWidth: 800, mx: 'auto', p: 3, textAlign: 'center', mt: 5 }}>
@@ -525,39 +551,8 @@ function SupplementDetailPage() {
 
     const amazonHref = `https://www.amazon.com/s?linkCode=ll2&tag=supplementrat-20&language=en_US&ref_=as_li_ss_tl&k=${encodeURIComponent(supplement.name)}`;
 
-    const ratingCount = supplement.ratings?.length || 0;
-    const avgRating = ratingCount > 0
-        ? (supplement.ratings.reduce((s, r) => s + r.score, 0) / ratingCount).toFixed(1)
-        : null;
-    const metaTitle = `${supplement.name} Reviews | SupplementRatings`;
-    const metaDesc = supplement.description
-        ? supplement.description.slice(0, 155)
-        : `Read ${ratingCount} user review${ratingCount !== 1 ? 's' : ''} for ${supplement.name} on SupplementRatings.`;
-    const jsonLd = {
-        '@context': 'https://schema.org',
-        '@type': 'Product',
-        name: supplement.name,
-        description: supplement.description || '',
-        ...(avgRating && ratingCount > 0 ? {
-            aggregateRating: {
-                '@type': 'AggregateRating',
-                ratingValue: avgRating,
-                reviewCount: ratingCount,
-                bestRating: 5,
-                worstRating: 1,
-            },
-        } : {}),
-    };
-
     return (
         <Container maxWidth="lg" sx={{ py: 3 }}>
-            <Helmet>
-                <title>{metaTitle}</title>
-                <meta name="description" content={metaDesc} />
-                <meta property="og:title" content={metaTitle} />
-                <meta property="og:description" content={metaDesc} />
-                <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-            </Helmet>
             <Box sx={{ display: 'flex', gap: 4, alignItems: 'flex-start' }}>
 
                 {/* Main content */}

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Box, CircularProgress } from '@mui/material';
-import { HelmetProvider } from 'react-helmet-async';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { BannerProvider } from './context/BannerContext';
@@ -73,9 +72,8 @@ function App() {
     };
 
     return (
-        <HelmetProvider>
-            <BannerProvider>
-                <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <BannerProvider>
+            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
                     <Navbar />
                     <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false}
                         newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
@@ -116,8 +114,7 @@ function App() {
                     </Box>
                     <Footer />
                 </Box>
-            </BannerProvider>
-        </HelmetProvider>
+        </BannerProvider>
     );
 }
 

@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import { usePageMeta } from '../hooks/usePageMeta';
 import {
     Autocomplete,
     Avatar,
@@ -468,12 +468,13 @@ function SupplementsFeed() {
 
     const sortedCategories = [...categories].sort((a, b) => a.localeCompare(b));
 
+    usePageMeta({
+        title: 'Supplement Reviews Feed | SupplementRatings',
+        description: 'Browse real user reviews for vitamins, minerals, and supplements. Filter by supplement, category, conditions, benefits, and side effects.',
+    });
+
     return (
         <>
-        <Helmet>
-            <title>Supplement Reviews Feed | SupplementRatings</title>
-            <meta name="description" content="Browse real user reviews for vitamins, minerals, and supplements. Filter by supplement, category, conditions, benefits, and side effects." />
-        </Helmet>
         <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
             <Box sx={{ maxWidth: 1200, mx: 'auto', px: { xs: 2, sm: 3 }, py: 3 }}>
                 <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start' }}>
