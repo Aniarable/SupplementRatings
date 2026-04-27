@@ -42,6 +42,7 @@ from pages.views import (
     contact_message,
     google_login,
     google_client_id,
+    ReportView,
 )
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -134,6 +135,7 @@ api_urlpatterns = [
     path("contact/", contact_message, name="contact-message"),
     path("auth/google/", google_login, name="google-login"),
     path("auth/google/client-id/", google_client_id, name="google-client-id"),
+    path("report/", ReportView.as_view(), name="report"),
     path("health/", health_check, name="health-check"),
     path("", include(router.urls)),
 ]

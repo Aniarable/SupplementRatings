@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { getSupplement, addRating, updateRating, getConditions, getBrands } from '../services/api';
+import { Helmet } from 'react-helmet-async';
+import { getSupplement, addRating, updateRating, getConditions, getBrands, getAlsoReviewed } from '../services/api';
 import ReviewDetail from '../components/ReviewDetail';
 import ImageUpload from '../components/ImageUpload';
 import { 
@@ -319,6 +320,14 @@ function SupplementDetailPage() {
         fetchBrands();
     }, []);
 
+    const [alsoReviewed, setAlsoReviewed] = useState([]);
+    useEffect(() => {
+        if (!supplementId) return;
+        getAlsoReviewed(supplementId)
+            .then(data => setAlsoReviewed(Array.isArray(data) ? data : []))
+            .catch(() => {});
+    }, [supplementId]);
+
     const getSortedRatings = (ratings) => {
         if (!ratings) return [];
         return [...ratings].sort((a, b) => {
@@ -516,8 +525,39 @@ function SupplementDetailPage() {
 
     const amazonHref = `https://www.amazon.com/s?linkCode=ll2&tag=supplementrat-20&language=en_US&ref_=as_li_ss_tl&k=${encodeURIComponent(supplement.name)}`;
 
+    const ratingCount = supplement.ratings?.length || 0;
+    const avgRating = ratingCount > 0
+        ? (supplement.ratings.reduce((s, r) => s + r.score, 0) / ratingCount).toFixed(1)
+        : null;
+    const metaTitle = `${supplement.name} Reviews | SupplementRatings`;
+    const metaDesc = supplement.description
+        ? supplement.description.slice(0, 155)
+        : `Read ${ratingCount} user review${ratingCount !== 1 ? 's' : ''} for ${supplement.name} on SupplementRatings.`;
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: supplement.name,
+        description: supplement.description || '',
+        ...(avgRating && ratingCount > 0 ? {
+            aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: avgRating,
+                reviewCount: ratingCount,
+                bestRating: 5,
+                worstRating: 1,
+            },
+        } : {}),
+    };
+
     return (
         <Container maxWidth="lg" sx={{ py: 3 }}>
+            <Helmet>
+                <title>{metaTitle}</title>
+                <meta name="description" content={metaDesc} />
+                <meta property="og:title" content={metaTitle} />
+                <meta property="og:description" content={metaDesc} />
+                <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+            </Helmet>
             <Box sx={{ display: 'flex', gap: 4, alignItems: 'flex-start' }}>
 
                 {/* Main content */}
@@ -586,16 +626,35 @@ function SupplementDetailPage() {
 
                 <List>
                     {!selectedReview ? (
-                        // Show all reviews
-                        getSortedRatings(supplement.ratings).map((rating) => (
-                            <SupplementRatingItem 
-                                key={rating.id}
-                                rating={rating}
-                                user={user}
-                                handleReviewClick={(r) => navigate(`/reviews/${r.id}`)}
-                                handleEditRating={handleEditRating}
-                            />
-                        ))
+                        supplement.ratings?.length > 0 ? (
+                            getSortedRatings(supplement.ratings).map((rating) => (
+                                <SupplementRatingItem
+                                    key={rating.id}
+                                    rating={rating}
+                                    user={user}
+                                    handleReviewClick={(r) => navigate(`/reviews/${r.id}`)}
+                                    handleEditRating={handleEditRating}
+                                />
+                            ))
+                        ) : (
+                            <Box sx={{ textAlign: 'center', py: 7 }}>
+                                <Typography variant="h6" color="text.secondary" gutterBottom>
+                                    No reviews yet
+                                </Typography>
+                                <Typography variant="body2" color="text.disabled" sx={{ mb: 3 }}>
+                                    Be the first to share your experience with {supplement.name}.
+                                </Typography>
+                                {isAuthenticated ? (
+                                    <Button variant="contained" size="large" startIcon={<AddIcon />} onClick={handleAddRating}>
+                                        Write the First Review
+                                    </Button>
+                                ) : (
+                                    <Button variant="outlined" size="large" component={RouterLink} to="/login">
+                                        Log in to Write a Review
+                                    </Button>
+                                )}
+                            </Box>
+                        )
                     ) : (
                         // Show specific review detail
                         <ReviewDetail
@@ -913,6 +972,41 @@ function SupplementDetailPage() {
                             Using our link costs you nothing extra and helps keep this site free.
                         </Typography>
                     </Paper>
+
+                    {alsoReviewed.length > 0 && (
+                        <Paper
+                            elevation={3}
+                            sx={{
+                                p: 2.5,
+                                borderRadius: 3,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                            }}
+                        >
+                            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.25 }}>
+                                Reviewers also tried
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
+                                {alsoReviewed.map(s => (
+                                    <RouterLink
+                                        key={s.id}
+                                        to={`/supplements/${s.id}`}
+                                        style={{ textDecoration: 'none', color: 'inherit' }}
+                                    >
+                                        <Typography
+                                            variant="body2"
+                                            sx={{
+                                                '&:hover': { textDecoration: 'underline', color: 'primary.main' },
+                                                transition: 'color 120ms',
+                                            }}
+                                        >
+                                            {s.name}
+                                        </Typography>
+                                    </RouterLink>
+                                ))}
+                            </Box>
+                        </Paper>
+                    )}
                 </Box>
 
             </Box>

@@ -9,11 +9,21 @@ import {
     IconButton,
     Avatar,
     Divider,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Tooltip,
 } from '@mui/material';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import ReplyIcon from '@mui/icons-material/Reply';
-import { addComment, updateComment, upvoteRating, upvoteComment, deleteMyRating, deleteComment } from '../services/api';
+import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
+import { addComment, updateComment, upvoteRating, upvoteComment, deleteMyRating, deleteComment, submitReport } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import ImageModal from './ImageModal';
@@ -27,7 +37,7 @@ const formatDate = (dateString) => {
 };
 
 // ─── Compact comment row ───────────────────────────────────────────────────────
-function CommentRow({ comment, currentUser, onEdit, onUpvote, onDownvote, onReply, onDelete, depth = 0 }) {
+function CommentRow({ comment, currentUser, onEdit, onUpvote, onDownvote, onReply, onDelete, onReport, depth = 0 }) {
     const [editing, setEditing] = useState(false);
     const [editText, setEditText] = useState(comment.content ?? '');
     const [replyOpen, setReplyOpen] = useState(false);
@@ -101,6 +111,13 @@ function CommentRow({ comment, currentUser, onEdit, onUpvote, onDownvote, onRepl
                                 Delete
                             </Button>
                         )}
+                        {currentUser && !isOwn && onReport && (
+                            <Tooltip title="Report">
+                                <IconButton size="small" sx={{ p: 0.25 }} onClick={() => onReport('comment', comment.id)}>
+                                    <FlagOutlinedIcon sx={{ fontSize: 11 }} />
+                                </IconButton>
+                            </Tooltip>
+                        )}
                     </Box>
                 </Box>
 
@@ -157,6 +174,7 @@ function CommentRow({ comment, currentUser, onEdit, onUpvote, onDownvote, onRepl
                         onDownvote={onDownvote}
                         onReply={onReply}
                         onDelete={onDelete}
+                        onReport={onReport}
                         depth={depth + 1}
                     />
                 ))}
@@ -173,6 +191,10 @@ function ReviewDetail({ rating, onBack, onCommentAdded, onEditRating, onRatingDe
     const [newComment, setNewComment] = useState('');
     const [isImageModalOpen, setImageModalOpen] = useState(false);
     const [modalImageUrl, setModalImageUrl] = useState('');
+    const [reportTarget, setReportTarget] = useState(null); // { content_type, object_id }
+    const [reportReason, setReportReason] = useState('other');
+    const [reportDetails, setReportDetails] = useState('');
+    const [reportSubmitting, setReportSubmitting] = useState(false);
 
     useEffect(() => {
         setCurrentRating(rating);
@@ -300,6 +322,27 @@ function ReviewDetail({ rating, onBack, onCommentAdded, onEditRating, onRatingDe
         }
     };
 
+    const closeReportDialog = () => {
+        setReportTarget(null);
+        setReportReason('other');
+        setReportDetails('');
+    };
+
+    const handleReportSubmit = async () => {
+        if (!reportTarget) return;
+        setReportSubmitting(true);
+        try {
+            await submitReport({ ...reportTarget, reason: reportReason, details: reportDetails });
+            toast.success('Report submitted. Thank you.');
+            closeReportDialog();
+        } catch (err) {
+            const msg = err?.data?.detail || err?.message || 'Failed to submit report';
+            toast.error(msg);
+        } finally {
+            setReportSubmitting(false);
+        }
+    };
+
     if (!currentRating?.user) return null;
 
     const isOwnReview = currentUser && currentUser.id === currentRating.user.id;
@@ -338,6 +381,13 @@ function ReviewDetail({ rating, onBack, onCommentAdded, onEditRating, onRatingDe
                             <ThumbDownIcon sx={{ fontSize: 14 }} />
                         </IconButton>
                         <Typography variant="caption">{currentRating.downvotes ?? 0}</Typography>
+                        {currentUser && !isOwnReview && (
+                            <Tooltip title="Report">
+                                <IconButton size="small" sx={{ p: 0.25, ml: 0.5 }} onClick={() => setReportTarget({ content_type: 'rating', object_id: currentRating.id })}>
+                                    <FlagOutlinedIcon sx={{ fontSize: 13 }} />
+                                </IconButton>
+                            </Tooltip>
+                        )}
                         {isOwnReview && onEditRating && (
                             <Button size="small" sx={{ ml: 0.5, fontSize: '0.72rem' }} onClick={() => onEditRating(currentRating)}>
                                 Edit
@@ -425,6 +475,7 @@ function ReviewDetail({ rating, onBack, onCommentAdded, onEditRating, onRatingDe
                             onDownvote={c => handleVoteComment(c, 'down')}
                             onReply={handleReply}
                             onDelete={handleDeleteComment}
+                            onReport={(ct, id) => setReportTarget({ content_type: ct, object_id: id })}
                             depth={0}
                         />
                     ))}
@@ -434,6 +485,37 @@ function ReviewDetail({ rating, onBack, onCommentAdded, onEditRating, onRatingDe
             {modalImageUrl && (
                 <ImageModal imageUrl={modalImageUrl} onClose={() => setImageModalOpen(false)} open={isImageModalOpen} />
             )}
+
+            {/* Report dialog */}
+            <Dialog open={!!reportTarget} onClose={closeReportDialog} maxWidth="xs" fullWidth>
+                <DialogTitle>Report Content</DialogTitle>
+                <DialogContent>
+                    <FormControl fullWidth sx={{ mt: 1, mb: 2 }}>
+                        <InputLabel>Reason</InputLabel>
+                        <Select value={reportReason} label="Reason" onChange={e => setReportReason(e.target.value)}>
+                            <MenuItem value="spam">Spam</MenuItem>
+                            <MenuItem value="misleading">Misleading information</MenuItem>
+                            <MenuItem value="inappropriate">Inappropriate content</MenuItem>
+                            <MenuItem value="other">Other</MenuItem>
+                        </Select>
+                    </FormControl>
+                    <TextField
+                        fullWidth
+                        multiline
+                        rows={3}
+                        label="Additional details (optional)"
+                        value={reportDetails}
+                        onChange={e => setReportDetails(e.target.value)}
+                        inputProps={{ maxLength: 500 }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={closeReportDialog}>Cancel</Button>
+                    <Button variant="contained" color="error" onClick={handleReportSubmit} disabled={reportSubmitting}>
+                        {reportSubmitting ? 'Submitting...' : 'Submit Report'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }

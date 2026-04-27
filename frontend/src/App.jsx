@@ -1,60 +1,65 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Box } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
+import { HelmetProvider } from 'react-helmet-async';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import { BannerProvider } from './context/BannerContext';
-import Login from './pages/Login';
-import Logout from './pages/Logout';
-import Signup from './pages/Signup';
-import SearchableSupplementList from './components/SearchableSupplementList';
-import SupplementDetailPage from './pages/SupplementDetailPage';
-import SupplementsFeed from './pages/SupplementsFeed';
-import UploadCSV from './components/UploadCSV';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import NotFound from './pages/NotFound';
-import Contact from './pages/Contact';
-import EmailVerification from './pages/EmailVerification';
 import { Toaster } from 'react-hot-toast';
-import UploadBrands from './pages/UploadBrands';
-import AdminDashboard from './pages/AdminDashboard';
 import PrivateRoute from './components/PrivateRoute';
-import AccountsPage from './pages/AccountsPage';
-import UserProfilePage from './pages/UserProfilePage';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPasswordConfirm from './pages/ResetPasswordConfirm';
-import ReviewPage from './pages/ReviewPage';
 import SessionWarning from './components/SessionWarning';
-import AboutPage from './pages/AboutPage';
-import TermsPage from './pages/TermsPage';
-import PrivacyPage from './pages/PrivacyPage';
 import { useAuth } from './context/AuthContext';
 import { sessionManager } from './services/api';
+
+// Eagerly loaded — always needed on first paint
+import SupplementsFeed from './pages/SupplementsFeed';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import NotFound from './pages/NotFound';
+
+// Lazy-loaded routes — only downloaded when navigated to
+const SearchableSupplementList = lazy(() => import('./components/SearchableSupplementList'));
+const SupplementDetailPage     = lazy(() => import('./pages/SupplementDetailPage'));
+const ReviewPage                = lazy(() => import('./pages/ReviewPage'));
+const Logout                    = lazy(() => import('./pages/Logout'));
+const Contact                   = lazy(() => import('./pages/Contact'));
+const ForgotPassword            = lazy(() => import('./pages/ForgotPassword'));
+const ResetPasswordConfirm      = lazy(() => import('./pages/ResetPasswordConfirm'));
+const EmailVerification         = lazy(() => import('./pages/EmailVerification'));
+const AccountsPage              = lazy(() => import('./pages/AccountsPage'));
+const UserProfilePage           = lazy(() => import('./pages/UserProfilePage'));
+const AboutPage                 = lazy(() => import('./pages/AboutPage'));
+const TermsPage                 = lazy(() => import('./pages/TermsPage'));
+const PrivacyPage               = lazy(() => import('./pages/PrivacyPage'));
+const UploadCSV                 = lazy(() => import('./components/UploadCSV'));
+const UploadBrands              = lazy(() => import('./pages/UploadBrands'));
+const AdminDashboard            = lazy(() => import('./pages/AdminDashboard'));
+
+function PageFallback() {
+    return (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '40vh' }}>
+            <CircularProgress />
+        </Box>
+    );
+}
 
 function App() {
     const { isAuthenticated } = useAuth();
     const [sessionWarningOpen, setSessionWarningOpen] = useState(false);
-    const [sessionTimeRemaining, setSessionTimeRemaining] = useState(120); // 2 minutes
+    const [sessionTimeRemaining] = useState(120);
 
     useEffect(() => {
         if (!isAuthenticated) return;
-
-        // Override the session manager's warning function to show our custom dialog
         const originalShowWarning = sessionManager.showSessionWarning;
-        sessionManager.showSessionWarning = () => {
-            setSessionWarningOpen(true);
-        };
-
-        // Override the session manager's expired function
+        sessionManager.showSessionWarning = () => setSessionWarningOpen(true);
         const originalHandleExpired = sessionManager.handleSessionExpired;
         sessionManager.handleSessionExpired = () => {
             setSessionWarningOpen(false);
             originalHandleExpired();
         };
-
         return () => {
-            // Restore original functions
             sessionManager.showSessionWarning = originalShowWarning;
             sessionManager.handleSessionExpired = originalHandleExpired;
         };
@@ -64,68 +69,55 @@ function App() {
         try {
             await sessionManager.refreshToken();
             setSessionWarningOpen(false);
-        } catch (error) {
-            console.error('Failed to extend session:', error);
-            // If refresh fails, the session manager will handle logout
-        }
-    };
-
-    const handleLogoutNow = () => {
-        setSessionWarningOpen(false);
-        sessionManager.handleSessionExpired();
+        } catch {}
     };
 
     return (
-        <BannerProvider>
-            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-                <Navbar />
-                <ToastContainer
-                    position="top-right"
-                    autoClose={5000}
-                    hideProgressBar={false}
-                    newestOnTop={false}
-                    closeOnClick
-                    rtl={false}
-                    pauseOnFocusLoss
-                    draggable
-                    pauseOnHover
-                />
-                <Toaster position="top-center" />
-                <SessionWarning
-                    open={sessionWarningOpen}
-                    onExtend={handleExtendSession}
-                    onLogout={handleLogoutNow}
-                    timeRemaining={sessionTimeRemaining}
-                />
-                <Box sx={{ flex: 1 }}>
-                    <Routes>
-                        <Route path="/" element={<Navigate to="/feed" replace />} />
-                        <Route path="/feed" element={<SupplementsFeed />} />
-                        <Route path="/supplements" element={<SearchableSupplementList />} />
-                        <Route path="/supplements/:id" element={<SupplementDetailPage />} />
-                        <Route path="/reviews/:ratingId" element={<ReviewPage />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/logout" element={<Logout />} />
-                        <Route path="/signup" element={<Signup />} />
-                        <Route path="/contact" element={<Contact />} />
-                        <Route path="/forgot-password" element={<ForgotPassword />} />
-                        <Route path="/reset-password-confirm/:uidb64/:token" element={<ResetPasswordConfirm />} />
-                        <Route path="/upload-supplements" element={<PrivateRoute adminOnly={true}><UploadCSV type="supplements" /></PrivateRoute>} />
-                        <Route path="/upload-conditions" element={<PrivateRoute adminOnly={true}><UploadCSV type="conditions" /></PrivateRoute>} />
-                        <Route path="/upload-brands" element={<PrivateRoute adminOnly={true}><UploadBrands /></PrivateRoute>} />
-                        <Route path="/admin-dashboard" element={<PrivateRoute adminOnly={true}><AdminDashboard /></PrivateRoute>} />
-                        <Route path="/verify-email/:token" element={<EmailVerification />} />
-                        <Route path="/accounts" element={<PrivateRoute><AccountsPage /></PrivateRoute>} />
-                        <Route path="/profile/:username" element={<UserProfilePage />} />
-                        <Route path="/about" element={<AboutPage />} />
-                        <Route path="/terms" element={<TermsPage />} />
-                        <Route path="/privacy" element={<PrivacyPage />} />
-                        <Route path="*" element={<NotFound />} />
-                    </Routes>
+        <HelmetProvider>
+            <BannerProvider>
+                <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                    <Navbar />
+                    <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false}
+                        newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
+                    <Toaster position="top-center" />
+                    <SessionWarning
+                        open={sessionWarningOpen}
+                        onExtend={handleExtendSession}
+                        onLogout={() => { setSessionWarningOpen(false); sessionManager.handleSessionExpired(); }}
+                        timeRemaining={sessionTimeRemaining}
+                    />
+                    <Box sx={{ flex: 1 }}>
+                        <Suspense fallback={<PageFallback />}>
+                            <Routes>
+                                <Route path="/" element={<Navigate to="/feed" replace />} />
+                                <Route path="/feed" element={<SupplementsFeed />} />
+                                <Route path="/supplements" element={<SearchableSupplementList />} />
+                                <Route path="/supplements/:id" element={<SupplementDetailPage />} />
+                                <Route path="/reviews/:ratingId" element={<ReviewPage />} />
+                                <Route path="/login" element={<Login />} />
+                                <Route path="/logout" element={<Logout />} />
+                                <Route path="/signup" element={<Signup />} />
+                                <Route path="/contact" element={<Contact />} />
+                                <Route path="/forgot-password" element={<ForgotPassword />} />
+                                <Route path="/reset-password-confirm/:uidb64/:token" element={<ResetPasswordConfirm />} />
+                                <Route path="/verify-email/:token" element={<EmailVerification />} />
+                                <Route path="/accounts" element={<PrivateRoute><AccountsPage /></PrivateRoute>} />
+                                <Route path="/profile/:username" element={<UserProfilePage />} />
+                                <Route path="/about" element={<AboutPage />} />
+                                <Route path="/terms" element={<TermsPage />} />
+                                <Route path="/privacy" element={<PrivacyPage />} />
+                                <Route path="/upload-supplements" element={<PrivateRoute adminOnly><UploadCSV type="supplements" /></PrivateRoute>} />
+                                <Route path="/upload-conditions" element={<PrivateRoute adminOnly><UploadCSV type="conditions" /></PrivateRoute>} />
+                                <Route path="/upload-brands" element={<PrivateRoute adminOnly><UploadBrands /></PrivateRoute>} />
+                                <Route path="/admin-dashboard" element={<PrivateRoute adminOnly><AdminDashboard /></PrivateRoute>} />
+                                <Route path="*" element={<NotFound />} />
+                            </Routes>
+                        </Suspense>
+                    </Box>
+                    <Footer />
                 </Box>
-                <Footer />
-            </Box>
-        </BannerProvider>
+            </BannerProvider>
+        </HelmetProvider>
     );
 }
 

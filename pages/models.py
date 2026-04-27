@@ -113,6 +113,47 @@ class Profile(models.Model):
         super().save(*args, **kwargs)
 
 
+@receiver(post_save, sender="pages.Comment")
+def notify_parent_comment_author(sender, instance, created, **kwargs):
+    """Email the author of the parent comment when someone replies to them."""
+    if not created:
+        return
+    if not instance.parent_comment:
+        return
+    parent_author = instance.parent_comment.user
+    if parent_author == instance.user:
+        return
+    if not parent_author.email:
+        return
+    try:
+        from django.core.mail import send_mail
+        from django.conf import settings as django_settings
+
+        review_id = instance.rating_id or (
+            instance.parent_comment.rating_id if instance.parent_comment else None
+        )
+        link = (
+            f"https://supplementratings.com/reviews/{review_id}"
+            if review_id
+            else "https://supplementratings.com/feed"
+        )
+        send_mail(
+            subject="Someone replied to your comment on SupplementRatings",
+            message=(
+                f"Hi {parent_author.username},\n\n"
+                f"{instance.user.username} replied to your comment:\n\n"
+                f'"{instance.content[:300]}"\n\n'
+                f"View the thread: {link}\n\n"
+                f"-- SupplementRatings"
+            ),
+            from_email=django_settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[parent_author.email],
+            fail_silently=True,
+        )
+    except Exception as e:
+        logger.warning(f"Reply notification email failed: {e}")
+
+
 @receiver(post_save, sender=User)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
     if created:
@@ -353,3 +394,38 @@ class UserUpvote(models.Model):
         if self.rating:
             return f"{self.user.username} upvoted rating {self.rating.id}"
         return f"{self.user.username} upvoted comment {self.comment.id}"
+
+
+class Report(models.Model):
+    REASON_SPAM = "spam"
+    REASON_MISLEADING = "misleading"
+    REASON_INAPPROPRIATE = "inappropriate"
+    REASON_OTHER = "other"
+    REASON_CHOICES = [
+        (REASON_SPAM, "Spam"),
+        (REASON_MISLEADING, "Misleading information"),
+        (REASON_INAPPROPRIATE, "Inappropriate content"),
+        (REASON_OTHER, "Other"),
+    ]
+
+    TYPE_RATING = "rating"
+    TYPE_COMMENT = "comment"
+    TYPE_CHOICES = [(TYPE_RATING, "Rating"), (TYPE_COMMENT, "Comment")]
+
+    reporter = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="reports_filed"
+    )
+    content_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+    object_id = models.PositiveIntegerField()
+    reason = models.CharField(
+        max_length=20, choices=REASON_CHOICES, default=REASON_OTHER
+    )
+    details = models.TextField(blank=True, max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+    reviewed = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = (("reporter", "content_type", "object_id"),)
+
+    def __str__(self):
+        return f"Report by {self.reporter.username} on {self.content_type} {self.object_id}"

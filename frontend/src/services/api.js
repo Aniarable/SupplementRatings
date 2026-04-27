@@ -1041,4 +1041,22 @@ export const getUserPublicProfile = async (username) => {
 //     }
 // };
 
+export const submitReport = async ({ content_type, object_id, reason, details = '' }) => {
+    try {
+        const response = await API.post('report/', { content_type, object_id, reason, details });
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const getAlsoReviewed = async (supplementId) => {
+    try {
+        const response = await API.get(`supplements/${supplementId}/also-reviewed/`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export default API;

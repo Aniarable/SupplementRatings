@@ -1,7 +1,16 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
-from .models import Supplement, Rating, Comment, Condition, Brand, UserUpvote, Profile
+from .models import (
+    Supplement,
+    Rating,
+    Comment,
+    Condition,
+    Brand,
+    UserUpvote,
+    Profile,
+    Report,
+)
 import logging
 from django.conf import settings
 import boto3
@@ -496,6 +505,13 @@ class RatingSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {"image": {"write_only": True, "required": False}}
 
+    def validate_comment(self, value):
+        if value and len(value.strip()) < 50:
+            raise serializers.ValidationError(
+                "Review text must be at least 50 characters."
+            )
+        return value
+
     def get_condition_names(self, obj):
         return [condition.name for condition in obj.conditions.all()]
 
@@ -737,3 +753,32 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
     class Meta:
         fields = ["uidb64", "token", "password"]
+
+
+class ReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Report
+        fields = ["id", "content_type", "object_id", "reason", "details", "created_at"]
+        read_only_fields = ["id", "created_at"]
+
+    def validate_content_type(self, value):
+        if value not in (Report.TYPE_RATING, Report.TYPE_COMMENT):
+            raise serializers.ValidationError(
+                "content_type must be 'rating' or 'comment'."
+            )
+        return value
+
+    def validate(self, data):
+        content_type = data.get("content_type")
+        object_id = data.get("object_id")
+        if content_type == Report.TYPE_RATING:
+            from .models import Rating as RatingModel
+
+            if not RatingModel.objects.filter(pk=object_id).exists():
+                raise serializers.ValidationError({"object_id": "Review not found."})
+        elif content_type == Report.TYPE_COMMENT:
+            from .models import Comment as CommentModel
+
+            if not CommentModel.objects.filter(pk=object_id).exists():
+                raise serializers.ValidationError({"object_id": "Comment not found."})
+        return data

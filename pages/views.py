@@ -30,6 +30,7 @@ from .models import (
     Brand,
     UserUpvote,
     Profile,
+    Report,
 )
 from .serializers import (
     SupplementSerializer,
@@ -45,6 +46,7 @@ from .serializers import (
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
     UsernameChangeSerializer,
+    ReportSerializer,
 )
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -224,6 +226,28 @@ class SupplementViewSet(viewsets.ModelViewSet):
     def categories(self, request):
         categories = Supplement.objects.values_list("category", flat=True).distinct()
         return Response(list(categories))
+
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="also-reviewed",
+        permission_classes=[AllowAny],
+    )
+    def also_reviewed(self, request, pk=None):
+        """Return up to 5 supplements also reviewed by users who reviewed this one."""
+        supplement = self.get_object()
+        reviewer_ids = Rating.objects.filter(supplement=supplement).values_list(
+            "user_id", flat=True
+        )
+        others = (
+            Supplement.objects.filter(ratings__user_id__in=reviewer_ids)
+            .exclude(pk=supplement.pk)
+            .annotate(shared_count=Count("ratings__user_id", distinct=True))
+            .order_by("-shared_count")[:5]
+        )
+        return Response(
+            SupplementSerializer(others, many=True, context={"request": request}).data
+        )
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()  # The supplement to be deleted
@@ -1839,3 +1863,28 @@ def google_client_id(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
     return Response({"client_id": client_id})
+
+
+class ReportView(APIView):
+    """Submit a report for a review or comment. One report per user per object."""
+
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+
+    def post(self, request):
+        serializer = ReportSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        content_type = serializer.validated_data["content_type"]
+        object_id = serializer.validated_data["object_id"]
+        if Report.objects.filter(
+            reporter=request.user, content_type=content_type, object_id=object_id
+        ).exists():
+            return Response(
+                {"detail": "You have already reported this content."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer.save(reporter=request.user)
+        return Response(
+            {"detail": "Report submitted. Thank you."}, status=status.HTTP_201_CREATED
+        )

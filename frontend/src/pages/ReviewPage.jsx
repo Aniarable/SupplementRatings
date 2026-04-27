@@ -3,17 +3,21 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import {
     Box,
     Button,
     CircularProgress,
     Container,
+    Divider,
     Link as MuiLink,
     Paper,
+    Tooltip,
     Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import ShareIcon from '@mui/icons-material/Share';
 import { getRating, upvoteRating } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
@@ -83,9 +87,45 @@ export default function ReviewPage() {
     if (!rating) return null;
 
     const amazonHref = AMAZON_BASE + encodeURIComponent(rating.supplement_display);
+    const pageUrl = typeof window !== 'undefined' ? window.location.href : `https://supplementratings.com/reviews/${ratingId}`;
+    const pageTitle = rating.title
+        ? `${rating.title} | SupplementRatings`
+        : `${rating.user?.username}'s ${rating.supplement_display} Review | SupplementRatings`;
+    const metaDesc = `${rating.user?.username} rated ${rating.supplement_display} ${rating.score}/5 stars.${rating.comment ? ' ' + rating.comment.slice(0, 130) : ''}`;
+
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Review',
+        name: rating.title || `${rating.user?.username}'s review of ${rating.supplement_display}`,
+        author: { '@type': 'Person', name: rating.user?.username },
+        itemReviewed: { '@type': 'Product', name: rating.supplement_display },
+        reviewRating: { '@type': 'Rating', ratingValue: rating.score, bestRating: 5, worstRating: 1 },
+        reviewBody: rating.comment || '',
+        datePublished: rating.created_at?.split('T')[0],
+    };
+
+    const handleShare = (platform) => {
+        const encoded = encodeURIComponent(pageUrl);
+        const text = encodeURIComponent(rating.title || `${rating.supplement_display} review on SupplementRatings`);
+        if (platform === 'twitter') {
+            window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encoded}`, '_blank', 'noopener');
+        } else if (platform === 'reddit') {
+            window.open(`https://www.reddit.com/submit?url=${encoded}&title=${text}`, '_blank', 'noopener');
+        } else {
+            navigator.clipboard.writeText(pageUrl).then(() => toast.success('Link copied!')).catch(() => toast.error('Copy failed'));
+        }
+    };
 
     return (
         <Container maxWidth="lg" sx={{ py: 3 }}>
+            <Helmet>
+                <title>{pageTitle}</title>
+                <meta name="description" content={metaDesc} />
+                <meta property="og:title" content={pageTitle} />
+                <meta property="og:description" content={metaDesc} />
+                <meta property="og:url" content={pageUrl} />
+                <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+            </Helmet>
             <Box sx={{ display: 'flex', gap: 4, alignItems: 'flex-start' }}>
 
                 {/* Left spacer — partial balance against sidebar */}
@@ -169,6 +209,29 @@ export default function ReviewPage() {
                         <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1.5, lineHeight: 1.5 }}>
                             Using our link costs you nothing extra and helps keep this site free.
                         </Typography>
+
+                        <Divider sx={{ my: 2 }} />
+
+                        <Typography variant="caption" fontWeight={700} color="text.secondary" display="block" sx={{ mb: 1 }}>
+                            Share this review
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            <Tooltip title="Share on X / Twitter">
+                                <Button size="small" variant="outlined" onClick={() => handleShare('twitter')} sx={{ minWidth: 0, px: 1.25, fontSize: '0.72rem', textTransform: 'none' }}>
+                                    X / Twitter
+                                </Button>
+                            </Tooltip>
+                            <Tooltip title="Share on Reddit">
+                                <Button size="small" variant="outlined" onClick={() => handleShare('reddit')} sx={{ minWidth: 0, px: 1.25, fontSize: '0.72rem', textTransform: 'none' }}>
+                                    Reddit
+                                </Button>
+                            </Tooltip>
+                            <Tooltip title="Copy link">
+                                <Button size="small" variant="outlined" startIcon={<ShareIcon sx={{ fontSize: 14 }} />} onClick={() => handleShare('copy')} sx={{ minWidth: 0, px: 1.25, fontSize: '0.72rem', textTransform: 'none' }}>
+                                    Copy
+                                </Button>
+                            </Tooltip>
+                        </Box>
                     </Paper>
                 </Box>
 
