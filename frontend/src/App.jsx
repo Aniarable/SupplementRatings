@@ -36,6 +36,8 @@ const UploadCSV                 = lazy(() => import('./components/UploadCSV'));
 const UploadBrands              = lazy(() => import('./pages/UploadBrands'));
 const AdminDashboard            = lazy(() => import('./pages/AdminDashboard'));
 const TopRatedPage              = lazy(() => import('./pages/TopRatedPage'));
+const ConditionPage             = lazy(() => import('./pages/ConditionPage'));
+const ComparisonPage            = lazy(() => import('./pages/ComparisonPage'));
 
 function PageFallback() {
     return (
@@ -110,6 +112,8 @@ function App() {
                                 <Route path="/upload-brands" element={<PrivateRoute adminOnly><UploadBrands /></PrivateRoute>} />
                                 <Route path="/admin-dashboard" element={<PrivateRoute adminOnly><AdminDashboard /></PrivateRoute>} />
                                 <Route path="/top-rated" element={<TopRatedPage />} />
+                                <Route path="/conditions/:conditionName" element={<ConditionPage />} />
+                                <Route path="/compare" element={<ComparisonPage />} />
                                 <Route path="*" element={<NotFound />} />
                             </Routes>
                         </Suspense>

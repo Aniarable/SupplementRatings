@@ -10,6 +10,7 @@ from .models import (
     UserUpvote,
     Profile,
     Report,
+    RatingHelpful,
 )
 import logging
 from django.conf import settings
@@ -449,6 +450,9 @@ class RatingSerializer(serializers.ModelSerializer):
     comments = serializers.SerializerMethodField()
     has_upvoted = serializers.SerializerMethodField()
     has_downvoted = serializers.SerializerMethodField()
+    helpful_count = serializers.SerializerMethodField()
+    has_marked_helpful = serializers.SerializerMethodField()
+    is_long_term_reviewer = serializers.SerializerMethodField()
     conditions = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Condition.objects.all()
     )
@@ -492,6 +496,9 @@ class RatingSerializer(serializers.ModelSerializer):
             "downvotes",
             "has_upvoted",
             "has_downvoted",
+            "helpful_count",
+            "has_marked_helpful",
+            "is_long_term_reviewer",
             "image",
             "image_url",
             "comments_count",
@@ -502,6 +509,9 @@ class RatingSerializer(serializers.ModelSerializer):
             "downvotes",
             "has_upvoted",
             "has_downvoted",
+            "helpful_count",
+            "has_marked_helpful",
+            "is_long_term_reviewer",
         ]
         extra_kwargs = {"image": {"write_only": True, "required": False}}
 
@@ -654,6 +664,21 @@ class RatingSerializer(serializers.ModelSerializer):
                 user=request.user, rating=obj, vote_type="down"
             ).exists()
         return False
+
+    def get_helpful_count(self, obj):
+        return obj.helpful_marks.count()
+
+    def get_has_marked_helpful(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return RatingHelpful.objects.filter(user=request.user, rating=obj).exists()
+        return False
+
+    def get_is_long_term_reviewer(self, obj):
+        from datetime import timedelta
+        from django.utils import timezone
+
+        return (timezone.now() - obj.created_at).days >= 90
 
 
 class SupplementSerializer(serializers.ModelSerializer):

@@ -23,7 +23,9 @@ import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import ReplyIcon from '@mui/icons-material/Reply';
 import FlagOutlinedIcon from '@mui/icons-material/FlagOutlined';
-import { addComment, updateComment, upvoteRating, upvoteComment, deleteMyRating, deleteComment, submitReport } from '../services/api';
+import VerifiedIcon from '@mui/icons-material/Verified';
+import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
+import { addComment, updateComment, upvoteRating, upvoteComment, deleteMyRating, deleteComment, submitReport, markHelpful } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import ImageModal from './ImageModal';
@@ -195,6 +197,8 @@ function ReviewDetail({ rating, onBack, onCommentAdded, onEditRating, onRatingDe
     const [reportReason, setReportReason] = useState('other');
     const [reportDetails, setReportDetails] = useState('');
     const [reportSubmitting, setReportSubmitting] = useState(false);
+    const [helpfulCount, setHelpfulCount] = useState(rating?.helpful_count ?? 0);
+    const [hasMarkedHelpful, setHasMarkedHelpful] = useState(rating?.has_marked_helpful ?? false);
 
     useEffect(() => {
         setCurrentRating(rating);
@@ -220,6 +224,18 @@ function ReviewDetail({ rating, onBack, onCommentAdded, onEditRating, onRatingDe
             if (onRatingDeleted) onRatingDeleted();
         } catch {
             toast.error('Failed to delete review');
+        }
+    };
+
+    // ── Helpful mark ────────────────────────────────────────────────────────
+    const handleMarkHelpful = async () => {
+        if (!currentUser) { toast.info('Log in to mark a review as helpful'); return; }
+        try {
+            const res = await markHelpful(currentRating.id);
+            setHelpfulCount(res.helpful_count);
+            setHasMarkedHelpful(res.has_marked_helpful);
+        } catch {
+            toast.error('Failed to update');
         }
     };
 
@@ -368,6 +384,11 @@ function ReviewDetail({ rating, onBack, onCommentAdded, onEditRating, onRatingDe
                             {currentRating.user.username}
                         </Typography>
                     </RouterLink>
+                    {currentRating.is_long_term_reviewer && (
+                        <Tooltip title="Long-term reviewer (90+ days experience)">
+                            <VerifiedIcon sx={{ fontSize: 14, color: 'primary.main', verticalAlign: 'middle' }} />
+                        </Tooltip>
+                    )}
                     <MuiRating value={currentRating.score} readOnly size="small" precision={0.5} />
                     <Typography variant="caption" color="text.secondary">{formatDate(currentRating.created_at)}</Typography>
                     {currentRating.is_edited && <Typography variant="caption" color="text.disabled">(edited)</Typography>}
@@ -437,6 +458,23 @@ function ReviewDetail({ rating, onBack, onCommentAdded, onEditRating, onRatingDe
                         />
                     </Box>
                 )}
+                {/* Helpful button */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 1 }}>
+                    <Tooltip title={hasMarkedHelpful ? 'Remove helpful mark' : 'Mark as helpful'}>
+                        <span>
+                            <Button
+                                size="small"
+                                variant={hasMarkedHelpful ? 'contained' : 'outlined'}
+                                startIcon={<ThumbUpOutlinedIcon sx={{ fontSize: 13 }} />}
+                                onClick={handleMarkHelpful}
+                                disabled={!!(currentUser && currentUser.id === currentRating.user?.id)}
+                                sx={{ textTransform: 'none', fontSize: '0.72rem', py: 0.25 }}
+                            >
+                                Helpful{helpfulCount > 0 ? ` (${helpfulCount})` : ''}
+                            </Button>
+                        </span>
+                    </Tooltip>
+                </Box>
             </Box>
 
             <Divider sx={{ mb: 1.5 }} />

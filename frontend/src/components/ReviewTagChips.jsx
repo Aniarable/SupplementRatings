@@ -1,14 +1,16 @@
 // components/ReviewTagChips.jsx
 // Shared blue/green/red chip rows for For / Helped with / Side effects.
 // Used on review cards across the whole site.
+// "For:" chips link to /conditions/:name so users can explore related supplements.
 
 import React from 'react';
+import { Link as RouterLink } from 'react-router-dom';
 import { Box, Chip, Typography } from '@mui/material';
 
 const ROWS = [
-    { key: 'conditions', label: 'For:',          color: 'primary' },
-    { key: 'benefits',   label: 'Helped with:',  color: 'success' },
-    { key: 'sideEffects',label: 'Side effects:',  color: 'error'   },
+    { key: 'conditions', label: 'For:',          color: 'primary', linked: true  },
+    { key: 'benefits',   label: 'Helped with:',  color: 'success', linked: false },
+    { key: 'sideEffects',label: 'Side effects:',  color: 'error',   linked: false },
 ];
 
 export default function ReviewTagChips({ conditionNames, benefitNames, sideEffectNames }) {
@@ -23,7 +25,7 @@ export default function ReviewTagChips({ conditionNames, benefitNames, sideEffec
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.6, mb: 1 }}>
-            {ROWS.map(({ key, label, color }) => {
+            {ROWS.map(({ key, label, color, linked }) => {
                 const items = data[key];
                 if (!items?.length) return null;
                 return (
@@ -35,16 +37,31 @@ export default function ReviewTagChips({ conditionNames, benefitNames, sideEffec
                         >
                             {label}
                         </Typography>
-                        {items.map((item) => (
-                            <Chip
-                                key={item}
-                                size="small"
-                                label={item}
-                                variant="outlined"
-                                color={color}
-                                sx={{ fontSize: '0.72rem', height: 22 }}
-                            />
-                        ))}
+                        {items.map((item) =>
+                            linked ? (
+                                <Chip
+                                    key={item}
+                                    size="small"
+                                    label={item}
+                                    variant="outlined"
+                                    color={color}
+                                    component={RouterLink}
+                                    to={`/conditions/${encodeURIComponent(item)}`}
+                                    onClick={e => e.stopPropagation()}
+                                    clickable
+                                    sx={{ fontSize: '0.72rem', height: 22 }}
+                                />
+                            ) : (
+                                <Chip
+                                    key={item}
+                                    size="small"
+                                    label={item}
+                                    variant="outlined"
+                                    color={color}
+                                    sx={{ fontSize: '0.72rem', height: 22 }}
+                                />
+                            )
+                        )}
                     </Box>
                 );
             })}

@@ -1059,6 +1059,15 @@ export const getAlsoReviewed = async (supplementId) => {
     }
 };
 
+export const markHelpful = async (ratingId) => {
+    try {
+        const response = await API.post(`ratings/${ratingId}/mark_helpful/`);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 export const getTopRated = async () => {
     try {
         const response = await API.get('supplements/top_rated/');

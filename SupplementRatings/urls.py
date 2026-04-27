@@ -2,12 +2,18 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.sitemaps.views import sitemap
 from django.http import HttpResponse
-from pages.sitemaps import StaticSitemap, SupplementSitemap, ReviewSitemap
+from pages.sitemaps import (
+    StaticSitemap,
+    SupplementSitemap,
+    ReviewSitemap,
+    ConditionSitemap,
+)
 
 sitemaps = {
     "static": StaticSitemap,
     "supplements": SupplementSitemap,
     "reviews": ReviewSitemap,
+    "conditions": ConditionSitemap,
 }
 
 

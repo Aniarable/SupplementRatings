@@ -895,10 +895,13 @@ function SupplementsFeed() {
                             </Paper>
                         )}
 
-                        {/* Top Rated leaderboard link */}
-                        <Box sx={{ textAlign: 'center' }}>
+                        {/* Quick nav links */}
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, alignItems: 'center' }}>
                             <MuiLink component={RouterLink} to="/top-rated" underline="hover" variant="caption" color="text.secondary">
                                 View Top Rated Supplements →
+                            </MuiLink>
+                            <MuiLink component={RouterLink} to="/compare" underline="hover" variant="caption" color="text.secondary">
+                                Compare Two Supplements →
                             </MuiLink>
                         </Box>
                     </Box>

@@ -1,6 +1,6 @@
 # pages/sitemaps.py
 from django.contrib.sitemaps import Sitemap
-from .models import Supplement, Rating
+from .models import Supplement, Rating, Condition
 
 
 class StaticSitemap(Sitemap):
@@ -13,6 +13,7 @@ class StaticSitemap(Sitemap):
             ("/", 1.0),
             ("/feed", 0.9),
             ("/browse", 0.9),
+            ("/top-rated", 0.8),
             ("/about", 0.5),
             ("/terms", 0.3),
             ("/privacy", 0.3),
@@ -50,3 +51,22 @@ class ReviewSitemap(Sitemap):
 
     def lastmod(self, obj):
         return obj.updated_at
+
+
+class ConditionSitemap(Sitemap):
+    protocol = "https"
+    changefreq = "weekly"
+    priority = 0.7
+
+    def items(self):
+        # Only conditions that have at least one rating
+        return (
+            Condition.objects.filter(condition_ratings__isnull=False)
+            .distinct()
+            .order_by("name")
+        )
+
+    def location(self, obj):
+        from urllib.parse import quote
+
+        return f"/conditions/{quote(obj.name)}"

@@ -31,6 +31,7 @@ from .models import (
     UserUpvote,
     Profile,
     Report,
+    RatingHelpful,
 )
 from .serializers import (
     SupplementSerializer,
@@ -645,6 +646,33 @@ class RatingViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[IsAuthenticated],
+        authentication_classes=[JWTAuthentication],
+    )
+    def mark_helpful(self, request, pk=None):
+        """Toggle 'helpful' mark on a review. Cannot mark your own review."""
+        rating = self.get_object()
+        if rating.user == request.user:
+            return Response(
+                {"detail": "You cannot mark your own review as helpful."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        obj, created = RatingHelpful.objects.get_or_create(
+            user=request.user, rating=rating
+        )
+        if not created:
+            obj.delete()
+        rating.refresh_from_db()
+        return Response(
+            {
+                "helpful_count": rating.helpful_marks.count(),
+                "has_marked_helpful": created,
+            }
+        )
+
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
@@ -672,7 +700,35 @@ class CommentViewSet(viewsets.ModelViewSet):
         return super().update(request, *args, **kwargs)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        comment = serializer.save(user=self.request.user)
+        # Notify the review author (skip if they're commenting on their own review)
+        rating = comment.rating
+        if (
+            rating
+            and rating.user
+            and rating.user != self.request.user
+            and rating.user.email
+        ):
+            supplement_name = (
+                rating.supplement.name if rating.supplement else "a supplement"
+            )
+            review_url = f"https://supplementratings.com/reviews/{rating.id}"
+            try:
+                send_mail(
+                    subject=f"New comment on your {supplement_name} review",
+                    message=(
+                        f"Hi {rating.user.username},\n\n"
+                        f"{self.request.user.username} commented on your {supplement_name} review:\n\n"
+                        f'"{comment.content[:200]}{"..." if len(comment.content) > 200 else ""}"\n\n'
+                        f"View the discussion: {review_url}\n\n"
+                        f"-- The SupplementRatings team"
+                    ),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[rating.user.email],
+                    fail_silently=True,
+                )
+            except Exception:
+                pass
 
     @action(
         detail=True,

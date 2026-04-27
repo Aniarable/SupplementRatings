@@ -429,3 +429,21 @@ class Report(models.Model):
 
     def __str__(self):
         return f"Report by {self.reporter.username} on {self.content_type} {self.object_id}"
+
+
+class RatingHelpful(models.Model):
+    """Tracks which users have marked a review as helpful."""
+
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="helpful_marks"
+    )
+    rating = models.ForeignKey(
+        Rating, on_delete=models.CASCADE, related_name="helpful_marks"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = (("user", "rating"),)
+
+    def __str__(self):
+        return f"{self.user.username} found rating {self.rating.id} helpful"
