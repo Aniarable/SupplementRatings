@@ -240,6 +240,10 @@ function FeedCard({ rating, onUpvote, onDownvote, currentUser }) {
                                 {rating.is_edited && (
                                     <Typography variant="caption" color="text.disabled">(edited)</Typography>
                                 )}
+                                {isOwnPost && (
+                                    <Chip label="Your review" size="small" color="primary" variant="outlined"
+                                        sx={{ fontSize: '0.62rem', height: 18, pointerEvents: 'none' }} />
+                                )}
                             </Box>
 
                             {/* Comment body preview */}
@@ -564,6 +568,7 @@ function SupplementsFeed() {
     usePageMeta({
         title: 'Supplement Reviews Feed | SupplementRatings',
         description: 'Browse real user reviews for vitamins, minerals, and supplements. Filter by supplement, category, conditions, benefits, and side effects.',
+        canonicalUrl: '/feed',
     });
 
     return (

@@ -67,7 +67,7 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.conf import settings
 from django.db import IntegrityError
-from pages.throttles import RegisterRateThrottle, AuthRateThrottle
+from pages.throttles import RegisterRateThrottle, AuthRateThrottle, VoteRateThrottle
 from rest_framework.throttling import AnonRateThrottle
 from .permissions import IsOwnerOrReadOnly, IsOwnerOrAdmin
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -552,7 +552,12 @@ class RatingViewSet(viewsets.ModelViewSet):
             )
             raise  # Re-raise the exception to ensure it's handled by DRF and results in a 500
 
-    @action(detail=True, methods=["post"], permission_classes=[IsAuthenticated])
+    @action(
+        detail=True,
+        methods=["post"],
+        permission_classes=[IsAuthenticated],
+        throttle_classes=[VoteRateThrottle],
+    )
     def upvote(self, request, pk=None):
         try:
             rating = self.get_object()
@@ -651,6 +656,7 @@ class RatingViewSet(viewsets.ModelViewSet):
         methods=["post"],
         permission_classes=[IsAuthenticated],
         authentication_classes=[JWTAuthentication],
+        throttle_classes=[VoteRateThrottle],
     )
     def mark_helpful(self, request, pk=None):
         """Toggle 'helpful' mark on a review. Cannot mark your own review."""

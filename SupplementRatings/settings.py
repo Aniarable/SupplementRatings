@@ -151,6 +151,7 @@ DEV_THROTTLE_RATES = {
     "user": "20000/minute",
     "auth": "200/minute",
     "register": "200/minute",
+    "vote": "1000/minute",
 }
 
 PROD_THROTTLE_RATES = {
@@ -158,6 +159,7 @@ PROD_THROTTLE_RATES = {
     "user": "1000/day",
     "auth": "5/minute",
     "register": "5/hour",
+    "vote": "30/minute",
 }
 
 REST_FRAMEWORK = {

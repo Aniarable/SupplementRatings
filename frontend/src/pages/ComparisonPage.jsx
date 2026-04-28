@@ -267,6 +267,7 @@ export default function ComparisonPage() {
         description: nameA && nameB
             ? `Compare ${nameA} and ${nameB} — ratings, dosage, benefits, and side effects from real user reviews.`
             : 'Compare two supplements side by side using real community reviews.',
+        canonicalUrl: '/compare',
     });
 
     return (

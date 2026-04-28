@@ -8,6 +8,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Toaster } from 'react-hot-toast';
 import PrivateRoute from './components/PrivateRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 import SessionWarning from './components/SessionWarning';
 import { useAuth } from './context/AuthContext';
 import { sessionManager } from './services/api';
@@ -88,6 +89,7 @@ function App() {
                         timeRemaining={sessionTimeRemaining}
                     />
                     <Box sx={{ flex: 1 }}>
+                        <ErrorBoundary>
                         <Suspense fallback={<PageFallback />}>
                             <Routes>
                                 <Route path="/" element={<Navigate to="/feed" replace />} />
@@ -117,6 +119,7 @@ function App() {
                                 <Route path="*" element={<NotFound />} />
                             </Routes>
                         </Suspense>
+                        </ErrorBoundary>
                     </Box>
                     <Footer />
                 </Box>

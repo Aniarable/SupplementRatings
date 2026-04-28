@@ -55,6 +55,24 @@ const formatDate = (dateString) => {
 
 const READ_MORE_THRESHOLD = 300;
 
+// Category → accent colour for OG image backgrounds
+const CATEGORY_COLORS = {
+    'Vitamins':     '1976D2',
+    'Minerals':     '388E3C',
+    'Amino Acids':  'F57C00',
+    'Herbs':        '558B2F',
+    'Protein':      'C62828',
+    'Probiotics':   '6A1B9A',
+    'Fish Oil':     '00838F',
+    'Omega-3':      '00838F',
+    'Adaptogens':   '4E342E',
+    'Antioxidants': 'AD1457',
+};
+function supplementOgImage(name, category) {
+    const color = CATEGORY_COLORS[category] || '5C6BC0';
+    return `https://placehold.co/1200x630/${color}/ffffff?text=${encodeURIComponent(name)}`;
+}
+
 // Rating item component (simplified version from SearchableSupplementList)
 const SupplementRatingItem = ({ rating, handleReviewClick, user, handleEditRating }) => {
     const [expanded, setExpanded] = useState(false);
@@ -349,6 +367,8 @@ function SupplementDetailPage() {
         return [...ratings].sort((a, b) => {
             if (sortOrder === 'likes') {
                 return (b.upvotes || 0) - (a.upvotes || 0);
+            } else if (sortOrder === 'helpful') {
+                return (b.helpful_count || 0) - (a.helpful_count || 0);
             } else {
                 return new Date(b.created_at) - new Date(a.created_at);
             }
@@ -532,7 +552,8 @@ function SupplementDetailPage() {
             },
         } : {}),
     } : null;
-    usePageMeta({ title: _metaTitle, description: _metaDesc, ldJson: _jsonLd });
+    const _ogImage = supplement ? supplementOgImage(supplement.name, supplement.category) : null;
+    usePageMeta({ title: _metaTitle, description: _metaDesc, ldJson: _jsonLd, ogImage: _ogImage });
 
     if (loading) {
         return (
@@ -630,6 +651,7 @@ function SupplementDetailPage() {
                             sx={{ minWidth: { xs: '100%', sm: 180 } }}
                         >
                             <MenuItem value="likes">Most Liked</MenuItem>
+                            <MenuItem value="helpful">Most Helpful</MenuItem>
                             <MenuItem value="recent">Most Recent</MenuItem>
                         </Select>
                     </Box>

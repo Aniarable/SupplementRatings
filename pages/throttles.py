@@ -8,3 +8,7 @@ class AuthRateThrottle(UserRateThrottle):
 
 class RegisterRateThrottle(AnonRateThrottle):
     scope = "register"  # per-IP throttle for /api/register
+
+
+class VoteRateThrottle(UserRateThrottle):
+    scope = "vote"  # per-user throttle for upvote/downvote/mark_helpful
