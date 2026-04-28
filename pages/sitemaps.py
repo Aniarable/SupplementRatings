@@ -12,7 +12,7 @@ class StaticSitemap(Sitemap):
         return [
             ("/", 1.0),
             ("/feed", 0.9),
-            ("/browse", 0.9),
+            ("/compare", 0.7),
             ("/top-rated", 0.8),
             ("/about", 0.5),
             ("/terms", 0.3),
