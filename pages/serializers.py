@@ -666,9 +666,15 @@ class RatingSerializer(serializers.ModelSerializer):
         return False
 
     def get_helpful_count(self, obj):
+        # Prefer the annotation added by RatingViewSet.get_queryset() to avoid N+1.
+        if hasattr(obj, "helpful_count_annotated"):
+            return obj.helpful_count_annotated
         return obj.helpful_marks.count()
 
     def get_has_marked_helpful(self, obj):
+        # Prefer the Exists annotation added by RatingViewSet.get_queryset() to avoid N+1.
+        if hasattr(obj, "user_has_marked_helpful"):
+            return obj.user_has_marked_helpful
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             return RatingHelpful.objects.filter(user=request.user, rating=obj).exists()

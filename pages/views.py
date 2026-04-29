@@ -252,7 +252,12 @@ class SupplementViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], permission_classes=[AllowAny])
     def top_rated(self, request):
-        """Return up to 10 supplements by average rating (min 3 ratings)."""
+        """Return up to 10 supplements by average rating (min 3 ratings). Cached 10 min."""
+        from django.core.cache import cache
+
+        cached = cache.get("top_rated_supplements")
+        if cached is not None:
+            return Response(cached)
         qs = (
             Supplement.objects.annotate(
                 avg_r=Round(Avg("ratings__score"), 2, output_field=FloatField()),
@@ -261,17 +266,20 @@ class SupplementViewSet(viewsets.ModelViewSet):
             .filter(cnt__gte=3)
             .order_by("-avg_r", "-cnt")[:10]
         )
-        return Response(
-            SupplementSerializer(qs, many=True, context={"request": request}).data
-        )
+        data = SupplementSerializer(qs, many=True, context={"request": request}).data
+        cache.set("top_rated_supplements", data, 600)
+        return Response(data)
 
     @action(detail=False, methods=["get"], permission_classes=[AllowAny])
     def trending(self, request):
-        """Return up to 5 supplements with the most ratings in the last 7 days."""
+        """Return up to 5 supplements with the most ratings in the last 7 days. Cached 10 min."""
         from datetime import timedelta
-
+        from django.core.cache import cache
         from django.utils import timezone
 
+        cached = cache.get("trending_supplements")
+        if cached is not None:
+            return Response(cached)
         since = timezone.now() - timedelta(days=7)
         qs = (
             Supplement.objects.annotate(
@@ -284,9 +292,9 @@ class SupplementViewSet(viewsets.ModelViewSet):
             .filter(recent_count__gt=0)
             .order_by("-recent_count")[:5]
         )
-        return Response(
-            SupplementSerializer(qs, many=True, context={"request": request}).data
-        )
+        data = SupplementSerializer(qs, many=True, context={"request": request}).data
+        cache.set("trending_supplements", data, 600)
+        return Response(data)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()  # The supplement to be deleted
@@ -465,8 +473,19 @@ class RatingViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = Rating.objects.all().annotate(
-            comments_count=Count("comments", distinct=True)
+            comments_count=Count("comments", distinct=True),
+            helpful_count_annotated=Count("helpful_marks", distinct=True),
         )
+        # Annotate whether the requesting user has marked each rating helpful —
+        # one subquery replaces N individual EXISTS calls in the serializer.
+        if self.request.user.is_authenticated:
+            queryset = queryset.annotate(
+                user_has_marked_helpful=Exists(
+                    RatingHelpful.objects.filter(
+                        user=self.request.user, rating=OuterRef("pk")
+                    )
+                )
+            )
         supplement_id = self.request.query_params.get("supplement", None)
         if supplement_id:
             queryset = queryset.filter(supplement_id=supplement_id)

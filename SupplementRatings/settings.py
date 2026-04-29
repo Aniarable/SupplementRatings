@@ -162,6 +162,27 @@ PROD_THROTTLE_RATES = {
     "vote": "30/minute",
 }
 
+# Cache — uses Redis when REDIS_URL is set in .env, otherwise in-process memory.
+# To enable Redis on EC2: sudo yum install -y redis && sudo systemctl start redis
+# then add REDIS_URL=redis://127.0.0.1:6379/1 to .env
+_REDIS_URL = config("REDIS_URL", default="")
+if _REDIS_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": _REDIS_URL,
+            "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+            "TIMEOUT": 300,
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "TIMEOUT": 300,
+        }
+    }
+
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
