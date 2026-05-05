@@ -132,7 +132,7 @@ function Navbar() {
                                 disableFocusRipple
                                 sx={{ '&:focus,&:focus-visible': { outline: 'none' }, WebkitTapHighlightColor: 'transparent', ml: 1 }}
                             >
-                                Fix Me
+                                For Me
                             </Button>
                         )}
                     </Box>
@@ -191,7 +191,7 @@ function Navbar() {
                                 disableFocusRipple
                                 sx={{ '&:focus,&:focus-visible': { outline: 'none' }, WebkitTapHighlightColor: 'transparent', ml: 1 }}
                             >
-                                Fix Me
+                                For Me
                             </Button>
                         )}
                         {isAdmin && (

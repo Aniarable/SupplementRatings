@@ -108,7 +108,7 @@ export default function FixMePage() {
     const [searched, setSearched] = useState('');
 
     usePageMeta({
-        title: 'Fix Me — Find Supplements for Your Issue | SupplementRatings',
+        title: 'For Me — Find Supplements for Your Issue | SupplementRatings',
         description: 'Describe what you want to fix and find the most relevant supplement reviews.',
         canonicalUrl: '/fix-me',
     });
@@ -138,7 +138,7 @@ export default function FixMePage() {
         <Container maxWidth="sm" sx={{ py: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
                 <HealingIcon sx={{ color: 'primary.main', fontSize: 28 }} />
-                <Typography variant="h5" fontWeight={700}>Fix Me</Typography>
+                <Typography variant="h5" fontWeight={700}>For Me</Typography>
             </Box>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                 Describe what you're trying to fix — in plain English. We'll find the most relevant reviews.
