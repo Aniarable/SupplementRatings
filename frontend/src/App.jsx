@@ -39,6 +39,9 @@ const AdminDashboard            = lazy(() => import('./pages/AdminDashboard'));
 const TopRatedPage              = lazy(() => import('./pages/TopRatedPage'));
 const ConditionPage             = lazy(() => import('./pages/ConditionPage'));
 const ComparisonPage            = lazy(() => import('./pages/ComparisonPage'));
+const FixMePage                 = lazy(() => import('./pages/FixMePage'));
+
+const SHOW_FIX_ME = import.meta.env.VITE_FEATURE_FIX_ME === 'true';
 
 function PageFallback() {
     return (
@@ -116,6 +119,7 @@ function App() {
                                 <Route path="/top-rated" element={<TopRatedPage />} />
                                 <Route path="/conditions/:conditionName" element={<ConditionPage />} />
                                 <Route path="/compare" element={<ComparisonPage />} />
+                                {SHOW_FIX_ME && <Route path="/fix-me" element={<FixMePage />} />}
                                 <Route path="*" element={<NotFound />} />
                             </Routes>
                         </Suspense>

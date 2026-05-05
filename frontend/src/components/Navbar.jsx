@@ -8,6 +8,8 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import MenuIcon from '@mui/icons-material/Menu';
 
+const SHOW_FIX_ME = import.meta.env.VITE_FEATURE_FIX_ME === 'true';
+
 const defaultProfileImage = DEFAULT_PROFILE_IMAGE_URL;
 
 function Navbar() {
@@ -118,6 +120,21 @@ function Navbar() {
                         >
                             Feed
                         </Button>
+                        {SHOW_FIX_ME && (
+                            <Button
+                                color="primary"
+                                component={Link}
+                                to="/fix-me"
+                                variant="outlined"
+                                size="small"
+                                onTouchEnd={() => blurActiveElement(60)}
+                                onMouseUp={() => blurActiveElement(60)}
+                                disableFocusRipple
+                                sx={{ '&:focus,&:focus-visible': { outline: 'none' }, WebkitTapHighlightColor: 'transparent', ml: 1 }}
+                            >
+                                Fix Me
+                            </Button>
+                        )}
                     </Box>
 
                     <Typography
@@ -162,6 +179,21 @@ function Navbar() {
                         >
                             Browse
                         </Button>
+                        {SHOW_FIX_ME && (
+                            <Button
+                                color="primary"
+                                component={Link}
+                                to="/fix-me"
+                                variant="outlined"
+                                size="small"
+                                onTouchEnd={() => blurActiveElement(60)}
+                                onMouseUp={() => blurActiveElement(60)}
+                                disableFocusRipple
+                                sx={{ '&:focus,&:focus-visible': { outline: 'none' }, WebkitTapHighlightColor: 'transparent', ml: 1 }}
+                            >
+                                Fix Me
+                            </Button>
+                        )}
                         {isAdmin && (
                             <>
                                 <Button color="inherit" component={Link} to="/upload-supplements">Upload Supplements</Button>

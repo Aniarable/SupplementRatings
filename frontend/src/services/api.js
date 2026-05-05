@@ -1086,4 +1086,9 @@ export const getTrending = async () => {
     }
 };
 
+export const fixMeSearch = async (query) => {
+    const response = await API.get('fix-me/', { params: { q: query } });
+    return response.data;
+};
+
 export default API;

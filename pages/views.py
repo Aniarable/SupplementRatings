@@ -2026,3 +2026,65 @@ class ReportView(APIView):
         return Response(
             {"detail": "Report submitted. Thank you."}, status=status.HTTP_201_CREATED
         )
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def fix_me_search(request):
+    """
+    Full-text search across review text and supplement names.
+    Falls back to condition/benefit name matching when FTS yields few results.
+    GET /api/fix-me/?q=<query>
+    """
+    from django.contrib.postgres.search import SearchVector, SearchQuery, SearchRank
+
+    query_str = request.query_params.get("q", "").strip()
+    if not query_str or len(query_str) < 3:
+        return Response({"error": "Query must be at least 3 characters."}, status=400)
+
+    search_query = SearchQuery(query_str, search_type="websearch")
+    search_vector = SearchVector("comment", weight="A") + SearchVector(
+        "supplement__name", weight="B"
+    )
+
+    fts_qs = (
+        Rating.objects.annotate(rank=SearchRank(search_vector, search_query))
+        .filter(rank__gt=0.0)
+        .select_related("supplement", "user")
+        .prefetch_related("conditions", "benefits")
+        .order_by("-rank", "-score")[:20]
+    )
+    results = list(fts_qs)
+    seen_ids = {r.id for r in results}
+
+    # Supplement with condition/benefit icontains if FTS returned few hits
+    if len(results) < 10:
+        fallback_qs = (
+            Rating.objects.filter(
+                Q(conditions__name__icontains=query_str)
+                | Q(benefits__name__icontains=query_str)
+            )
+            .exclude(id__in=seen_ids)
+            .select_related("supplement", "user")
+            .prefetch_related("conditions", "benefits")
+            .distinct()
+            .order_by("-score")[: 20 - len(results)]
+        )
+        results += list(fallback_qs)
+
+    data = [
+        {
+            "id": r.id,
+            "supplement_id": r.supplement_id,
+            "supplement_name": r.supplement.name if r.supplement else "",
+            "supplement_category": r.supplement.category if r.supplement else "",
+            "score": r.score,
+            "comment": r.comment,
+            "condition_names": [c.name for c in r.conditions.all()],
+            "benefit_names": [b.name for b in r.benefits.all()],
+            "username": r.user.username if r.user else None,
+            "created_at": r.created_at,
+        }
+        for r in results
+    ]
+    return Response(data)
