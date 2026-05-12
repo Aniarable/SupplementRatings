@@ -206,7 +206,7 @@ function Navbar() {
                     <Box sx={{ flexGrow: 0, display: 'flex', alignItems: 'center' }}>
                         {isAuthenticated && user ? (
                             <>
-                                {isAdmin && (
+                                {(isAdmin || user?.has_dashboard_access) && (
                                     <IconButton component={Link} to="/admin-dashboard" color="inherit" title="Admin Dashboard" sx={{mr:1}}>
                                         <AdminPanelSettingsIcon />
                                     </IconButton>
