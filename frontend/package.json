@@ -24,7 +24,8 @@
     "react-helmet-async": "^3.0.0",
     "react-hot-toast": "^2.4.1",
     "react-router-dom": "^7.0.2",
-    "react-toastify": "^10.0.6"
+    "react-toastify": "^10.0.6",
+    "recharts": "^3.8.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.15.0",

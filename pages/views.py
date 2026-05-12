@@ -32,6 +32,7 @@ from .models import (
     Profile,
     Report,
     RatingHelpful,
+    PageView,
 )
 from .serializers import (
     SupplementSerializer,
@@ -2088,3 +2089,93 @@ def fix_me_search(request):
         for r in results
     ]
     return Response(data)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def track_page_view(request):
+    """Fire-and-forget page view tracking. Called on every route change from the frontend."""
+    session_id = (request.data.get("session_id") or "").strip()[:64]
+    path = (request.data.get("path") or "").strip()[:500]
+    if not session_id or not path:
+        return Response(status=204)
+    PageView.objects.create(
+        session_id=session_id,
+        user=request.user if request.user.is_authenticated else None,
+        path=path,
+    )
+    return Response(status=204)
+
+
+@api_view(["GET"])
+@permission_classes([IsAdminUser])
+def admin_stats(request):
+    """Aggregate stats for the admin dashboard: users, reviews, supplements, visitors."""
+    from datetime import timedelta
+    from django.db.models.functions import TruncDate
+    from django.utils import timezone
+
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_ago = now - timedelta(days=7)
+    month_ago = now - timedelta(days=30)
+
+    # Users
+    total_users = User.objects.count()
+    new_users_7d = User.objects.filter(date_joined__gte=week_ago).count()
+    new_users_30d = User.objects.filter(date_joined__gte=month_ago).count()
+
+    # Reviews
+    total_reviews = Rating.objects.count()
+    new_reviews_7d = Rating.objects.filter(created_at__gte=week_ago).count()
+    new_reviews_30d = Rating.objects.filter(created_at__gte=month_ago).count()
+    avg_rating = Rating.objects.aggregate(avg=Avg("score"))["avg"]
+
+    # Supplements
+    total_supplements = Supplement.objects.count()
+
+    # Top reviewers
+    top_reviewers = list(
+        User.objects.annotate(review_count=Count("ratings"))
+        .filter(review_count__gt=0)
+        .order_by("-review_count")
+        .values("username", "review_count")[:5]
+    )
+
+    # Visitors — distinct session_ids per period
+    dau = PageView.objects.filter(created_at__gte=today_start).values("session_id").distinct().count()
+    wau = PageView.objects.filter(created_at__gte=week_ago).values("session_id").distinct().count()
+    mau = PageView.objects.filter(created_at__gte=month_ago).values("session_id").distinct().count()
+
+    # Daily chart — page views + unique visitors per day for last 30 days
+    daily_chart = list(
+        PageView.objects.filter(created_at__gte=month_ago)
+        .annotate(date=TruncDate("created_at"))
+        .values("date")
+        .annotate(views=Count("id"), unique=Count("session_id", distinct=True))
+        .order_by("date")
+        .values("date", "views", "unique")
+    )
+
+    return Response(
+        {
+            "users": {
+                "total": total_users,
+                "new_7d": new_users_7d,
+                "new_30d": new_users_30d,
+            },
+            "reviews": {
+                "total": total_reviews,
+                "new_7d": new_reviews_7d,
+                "new_30d": new_reviews_30d,
+                "avg_rating": round(float(avg_rating), 2) if avg_rating else None,
+            },
+            "supplements": {"total": total_supplements},
+            "top_reviewers": top_reviewers,
+            "visitors": {"dau": dau, "wau": wau, "mau": mau},
+            "daily_chart": [
+                {"date": str(d["date"]), "views": d["views"], "unique": d["unique"]}
+                for d in daily_chart
+            ],
+        }
+    )

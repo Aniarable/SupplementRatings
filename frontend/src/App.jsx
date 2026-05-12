@@ -12,6 +12,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import SessionWarning from './components/SessionWarning';
 import { useAuth } from './context/AuthContext';
 import { sessionManager } from './services/api';
+import { usePageTracking } from './hooks/usePageTracking';
 
 // Eagerly loaded — always needed on first paint
 import SupplementsFeed from './pages/SupplementsFeed';
@@ -53,6 +54,7 @@ function PageFallback() {
 
 function App() {
     const { isAuthenticated } = useAuth();
+    usePageTracking();
     const [sessionWarningOpen, setSessionWarningOpen] = useState(false);
     const [sessionTimeRemaining] = useState(120);
 

@@ -447,3 +447,22 @@ class RatingHelpful(models.Model):
 
     def __str__(self):
         return f"{self.user.username} found rating {self.rating.id} helpful"
+
+
+class PageView(models.Model):
+    """Anonymous page-view tracking for the admin stats dashboard."""
+
+    session_id = models.CharField(max_length=64, db_index=True)
+    user = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL, related_name="page_views"
+    )
+    path = models.CharField(max_length=500)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["created_at", "session_id"]),
+        ]
+
+    def __str__(self):
+        return f"{self.session_id[:8]} → {self.path} at {self.created_at:%Y-%m-%d %H:%M}"

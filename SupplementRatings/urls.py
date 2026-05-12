@@ -50,6 +50,8 @@ from pages.views import (
     google_client_id,
     ReportView,
     fix_me_search,
+    track_page_view,
+    admin_stats,
 )
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -145,6 +147,8 @@ api_urlpatterns = [
     path("report/", ReportView.as_view(), name="report"),
     path("health/", health_check, name="health-check"),
     path("fix-me/", fix_me_search, name="fix-me-search"),
+    path("track/", track_page_view, name="track-page-view"),
+    path("admin-stats/", admin_stats, name="admin-stats"),
     path("", include(router.urls)),
 ]
 

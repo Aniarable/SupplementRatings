@@ -1,11 +1,12 @@
 import React, { useContext } from 'react';
 import { Container, Typography, Paper, Box, Grid, Alert } from '@mui/material';
-import { useAuth } from '../context/AuthContext'; // Assuming you have an AuthContext that provides user info including isAdmin/is_staff
+import { useAuth } from '../context/AuthContext';
 import ManageSupplements from '../components/admin/ManageSupplements';
 import ManageBrands from '../components/admin/ManageBrands';
 import ManageConditions from '../components/admin/ManageConditions';
 import ManageRatings from '../components/admin/ManageRatings';
 import ManageComments from '../components/admin/ManageComments';
+import StatsPanel from '../components/admin/StatsPanel';
 // Import other admin components here as they are created
 // import ManageConditions from '../components/admin/ManageConditions';
 // import ManageRatings from '../components/admin/ManageRatings';
@@ -31,6 +32,7 @@ const AdminDashboard = () => {
                 Admin Dashboard
             </Typography>
             
+            <StatsPanel />
             <Grid container spacing={3}>
                 <Grid item xs={12} md={6} lg={4}>
                     <ManageSupplements />

@@ -1091,4 +1091,17 @@ export const fixMeSearch = async (query) => {
     return response.data;
 };
 
+export const trackPageView = async (sessionId, path) => {
+    try {
+        await API.post('track/', { session_id: sessionId, path });
+    } catch {
+        // fire-and-forget — never throw
+    }
+};
+
+export const getAdminStats = async () => {
+    const response = await API.get('admin-stats/');
+    return response.data;
+};
+
 export default API;
