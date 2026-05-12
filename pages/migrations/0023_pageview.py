@@ -4,7 +4,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("pages", "0022_ratinghelpful"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
@@ -14,7 +13,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="PageView",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("session_id", models.CharField(db_index=True, max_length=64)),
                 ("path", models.CharField(max_length=500)),
                 ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
@@ -29,6 +36,13 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
-            options={"indexes": [models.Index(fields=["created_at", "session_id"], name="pages_pagev_created_idx")]},
+            options={
+                "indexes": [
+                    models.Index(
+                        fields=["created_at", "session_id"],
+                        name="pages_pagev_created_idx",
+                    )
+                ]
+            },
         ),
     ]

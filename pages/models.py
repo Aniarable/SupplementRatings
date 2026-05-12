@@ -454,7 +454,11 @@ class PageView(models.Model):
 
     session_id = models.CharField(max_length=64, db_index=True)
     user = models.ForeignKey(
-        User, null=True, blank=True, on_delete=models.SET_NULL, related_name="page_views"
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="page_views",
     )
     path = models.CharField(max_length=500)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -465,4 +469,6 @@ class PageView(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.session_id[:8]} → {self.path} at {self.created_at:%Y-%m-%d %H:%M}"
+        return (
+            f"{self.session_id[:8]} → {self.path} at {self.created_at:%Y-%m-%d %H:%M}"
+        )

@@ -190,16 +190,23 @@ class BasicUserSerializer(serializers.ModelSerializer):
     profile_image_url = serializers.SerializerMethodField()
     chronic_conditions = serializers.SerializerMethodField()
     username_change_available_at = serializers.SerializerMethodField()
+    is_staff = serializers.BooleanField(read_only=True)
+    has_dashboard_access = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             "id",
             "username",
+            "is_staff",
+            "has_dashboard_access",
             "profile_image_url",
             "chronic_conditions",
             "username_change_available_at",
         ]
+
+    def get_has_dashboard_access(self, obj):
+        return obj.is_staff or obj.groups.filter(name="Dashboard").exists()
 
     def get_profile_image_url(self, obj):
         request = self.context.get("request")

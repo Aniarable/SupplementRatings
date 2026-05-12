@@ -2107,8 +2107,18 @@ def track_page_view(request):
     return Response(status=204)
 
 
+class IsDashboardUser(permissions.BasePermission):
+    """Allows is_staff users OR members of the 'Dashboard' group."""
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and (
+            request.user.is_staff
+            or request.user.groups.filter(name="Dashboard").exists()
+        )
+
+
 @api_view(["GET"])
-@permission_classes([IsAdminUser])
+@permission_classes([IsDashboardUser])
 def admin_stats(request):
     """Aggregate stats for the admin dashboard: users, reviews, supplements, visitors."""
     from datetime import timedelta
@@ -2143,9 +2153,24 @@ def admin_stats(request):
     )
 
     # Visitors — distinct session_ids per period
-    dau = PageView.objects.filter(created_at__gte=today_start).values("session_id").distinct().count()
-    wau = PageView.objects.filter(created_at__gte=week_ago).values("session_id").distinct().count()
-    mau = PageView.objects.filter(created_at__gte=month_ago).values("session_id").distinct().count()
+    dau = (
+        PageView.objects.filter(created_at__gte=today_start)
+        .values("session_id")
+        .distinct()
+        .count()
+    )
+    wau = (
+        PageView.objects.filter(created_at__gte=week_ago)
+        .values("session_id")
+        .distinct()
+        .count()
+    )
+    mau = (
+        PageView.objects.filter(created_at__gte=month_ago)
+        .values("session_id")
+        .distinct()
+        .count()
+    )
 
     # Daily chart — page views + unique visitors per day for last 30 days
     daily_chart = list(

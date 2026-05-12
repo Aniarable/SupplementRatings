@@ -18,7 +18,7 @@ const AdminDashboard = () => {
     // If isAdmin is not directly available, you might check user.is_staff
     // const effectiveIsAdmin = isAdmin || (user && user.is_staff);
 
-    if (!isAdmin) { // Or !effectiveIsAdmin
+    if (!isAdmin && !user?.has_dashboard_access) { // Or !effectiveIsAdmin
         return (
             <Container sx={{ py: 4 }}>
                 <Alert severity="error">Access Denied. You must be an administrator to view this page.</Alert>

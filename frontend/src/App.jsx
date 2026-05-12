@@ -117,7 +117,7 @@ function App() {
                                 <Route path="/upload-supplements" element={<PrivateRoute adminOnly><UploadCSV type="supplements" /></PrivateRoute>} />
                                 <Route path="/upload-conditions" element={<PrivateRoute adminOnly><UploadCSV type="conditions" /></PrivateRoute>} />
                                 <Route path="/upload-brands" element={<PrivateRoute adminOnly><UploadBrands /></PrivateRoute>} />
-                                <Route path="/admin-dashboard" element={<PrivateRoute adminOnly><AdminDashboard /></PrivateRoute>} />
+                                <Route path="/admin-dashboard" element={<PrivateRoute dashboardAccess><AdminDashboard /></PrivateRoute>} />
                                 <Route path="/top-rated" element={<TopRatedPage />} />
                                 <Route path="/conditions/:conditionName" element={<ConditionPage />} />
                                 <Route path="/compare" element={<ComparisonPage />} />
