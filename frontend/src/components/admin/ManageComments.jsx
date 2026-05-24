@@ -15,10 +15,12 @@ import {
     InputAdornment
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SearchIcon from '@mui/icons-material/Search';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 // Import the new function for fetching all comments and the existing delete function
-import { searchAllComments, deleteCommentByAdmin } from '../../services/api'; 
+import { searchAllComments, deleteCommentByAdmin } from '../../services/api';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 const ManageComments = () => {
@@ -131,7 +133,12 @@ const ManageComments = () => {
                             secondary={`${comment.content?.substring(0, 100)}...`}
                         />
                         <ListItemSecondaryAction>
-                            <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteClick(comment)}>
+                            {(comment.rating_id || comment.rating) && (
+                                <IconButton edge="end" aria-label="view" component={Link} to={`/reviews/${comment.rating_id || comment.rating}`} target="_blank" rel="noopener">
+                                    <OpenInNewIcon fontSize="small" />
+                                </IconButton>
+                            )}
+                            <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteClick(comment)} sx={{ ml: 0.5 }}>
                                 <DeleteIcon />
                             </IconButton>
                         </ListItemSecondaryAction>

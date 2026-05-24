@@ -6,6 +6,7 @@ import ManageBrands from '../components/admin/ManageBrands';
 import ManageConditions from '../components/admin/ManageConditions';
 import ManageRatings from '../components/admin/ManageRatings';
 import ManageComments from '../components/admin/ManageComments';
+import ManageUsers from '../components/admin/ManageUsers';
 import StatsPanel from '../components/admin/StatsPanel';
 // Import other admin components here as they are created
 // import ManageConditions from '../components/admin/ManageConditions';
@@ -48,6 +49,9 @@ const AdminDashboard = () => {
                 </Grid>
                 <Grid item xs={12} md={6}>
                     <ManageComments />
+                </Grid>
+                <Grid item xs={12}>
+                    <ManageUsers />
                 </Grid>
                 {/* Future sections for other management components */}
                 {/* 

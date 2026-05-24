@@ -15,10 +15,12 @@ import {
     InputAdornment
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import SearchIcon from '@mui/icons-material/Search';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 // Import the new function for fetching all ratings and the existing delete function
-import { searchAllRatings, deleteRatingByAdmin } from '../../services/api'; 
+import { searchAllRatings, deleteRatingByAdmin } from '../../services/api';
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 const ManageRatings = () => {
@@ -136,7 +138,10 @@ const ManageRatings = () => {
                             secondary={`User: ${rating.user?.username || rating.user} | ID: ${rating.id} | Comment: ${rating.comment?.substring(0,50)}...`}
                         />
                         <ListItemSecondaryAction>
-                            <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteClick(rating)}>
+                            <IconButton edge="end" aria-label="view" component={Link} to={`/reviews/${rating.id}`} target="_blank" rel="noopener">
+                                <OpenInNewIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteClick(rating)} sx={{ ml: 0.5 }}>
                                 <DeleteIcon />
                             </IconButton>
                         </ListItemSecondaryAction>

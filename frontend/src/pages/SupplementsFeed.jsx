@@ -208,14 +208,20 @@ function FeedCard({ rating, onUpvote, onDownvote, currentUser }) {
                             )}
 
                             {/* Supplement name — headline when no title, secondary context otherwise */}
-                            <Typography
-                                variant="body2"
-                                fontWeight={rating.title ? 400 : 700}
-                                color="primary.main"
-                                sx={{ '&:hover': { textDecoration: 'underline' }, mb: 0.25 }}
+                            <RouterLink
+                                to={`/supplements/${rating.supplement}`}
+                                onClick={e => e.stopPropagation()}
+                                style={{ textDecoration: 'none' }}
                             >
-                                {supplementName}
-                            </Typography>
+                                <Typography
+                                    variant="body2"
+                                    fontWeight={rating.title ? 400 : 700}
+                                    color="primary.main"
+                                    sx={{ '&:hover': { textDecoration: 'underline' }, mb: 0.25 }}
+                                >
+                                    {supplementName}
+                                </Typography>
+                            </RouterLink>
 
                             {/* User + stars + time */}
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>

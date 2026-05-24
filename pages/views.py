@@ -2204,3 +2204,29 @@ def admin_stats(request):
             ],
         }
     )
+
+
+@api_view(["GET"])
+@permission_classes([IsDashboardUser])
+def admin_users(request):
+    """Paginated list of all users with their review count, for the admin dashboard."""
+    search = request.query_params.get("search", "").strip()
+    page = int(request.query_params.get("page", 1))
+    page_size = int(request.query_params.get("page_size", 20))
+
+    qs = (
+        User.objects.annotate(review_count=Count("ratings"))
+        .order_by("-date_joined")
+        .values("id", "username", "email", "date_joined", "is_active", "review_count")
+    )
+    if search:
+        qs = qs.filter(username__icontains=search)
+
+    total = qs.count()
+    offset = (page - 1) * page_size
+    users = list(qs[offset : offset + page_size])
+
+    for u in users:
+        u["date_joined"] = u["date_joined"].strftime("%Y-%m-%d")
+
+    return Response({"count": total, "results": users})

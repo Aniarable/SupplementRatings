@@ -1104,4 +1104,9 @@ export const getAdminStats = async () => {
     return response.data;
 };
 
+export const getAdminUsers = async (params = {}) => {
+    const response = await API.get('admin-users/', { params });
+    return response.data;
+};
+
 export default API;

@@ -52,6 +52,7 @@ from pages.views import (
     fix_me_search,
     track_page_view,
     admin_stats,
+    admin_users,
 )
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -89,15 +90,31 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         response = super().post(request, *args, **kwargs)
         if response.status_code == 200:
             from rest_framework_simplejwt.tokens import AccessToken
+            from django.contrib.auth.models import User as AuthUser
 
             token = response.data["access"]
             user_id = AccessToken(token)["user_id"]
-            from django.contrib.auth.models import User
-
-            user = User.objects.get(id=user_id)
+            user = AuthUser.objects.get(id=user_id)
             response.data.update(
                 {"is_staff": user.is_staff, "id": user.id, "username": user.username}
             )
+        elif response.status_code == 401:
+            from django.contrib.auth.models import User as AuthUser
+            from rest_framework.response import Response as DRFResponse
+
+            username = request.data.get("username", "")
+            if (
+                username
+                and AuthUser.objects.filter(
+                    username__iexact=username, is_active=False
+                ).exists()
+            ):
+                return DRFResponse(
+                    {
+                        "detail": "Your email is not verified. Please check your inbox for a verification link."
+                    },
+                    status=401,
+                )
         return response
 
 
@@ -149,6 +166,7 @@ api_urlpatterns = [
     path("fix-me/", fix_me_search, name="fix-me-search"),
     path("track/", track_page_view, name="track-page-view"),
     path("admin-stats/", admin_stats, name="admin-stats"),
+    path("admin-users/", admin_users, name="admin-users"),
     path("", include(router.urls)),
 ]
 
