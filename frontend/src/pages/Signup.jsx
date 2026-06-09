@@ -33,7 +33,9 @@ function Signup() {
         <span>
           Registration successful!{' '}
           <strong>Please check your email to verify your account.</strong>
-        </span>
+          {' '}If you don&apos;t see it within a few minutes, check your spam or junk folder.
+        </span>,
+        { autoClose: 12000 }
       );
       navigate('/login');
     } catch (error) {

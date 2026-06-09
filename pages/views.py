@@ -1285,7 +1285,7 @@ def register_user(request):
 
                 # Email sending is outside the transaction. If it fails, the user is still created.
                 try:
-                    mail_subject = "Activate your account."
+                    mail_subject = "Verify your email for SupplementRatings"
 
                     if settings.DEBUG:
                         verification_url = (

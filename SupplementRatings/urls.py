@@ -111,7 +111,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             ):
                 return DRFResponse(
                     {
-                        "detail": "Your email is not verified. Please check your inbox for a verification link."
+                        "detail": "Your email is not verified. Please check your inbox (and your spam or junk folder) for the verification link."
                     },
                     status=401,
                 )
