@@ -22,8 +22,7 @@ import { getRating, upvoteRating } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import ReviewDetail from '../components/ReviewDetail';
-
-const AMAZON_BASE = 'https://www.amazon.com/s?linkCode=ll2&tag=supplementrat-20&language=en_US&ref_=as_li_ss_tl&k=';
+import { buildAmazonSearchUrl } from '../config';
 
 export default function ReviewPage() {
     const { ratingId } = useParams();
@@ -105,7 +104,7 @@ export default function ReviewPage() {
 
     if (!rating) return null;
 
-    const amazonHref = AMAZON_BASE + encodeURIComponent(rating.supplement_display);
+    const amazonHref = buildAmazonSearchUrl(rating.supplement_display);
     const pageUrl = window.location.href;
 
     const handleShare = (platform) => {

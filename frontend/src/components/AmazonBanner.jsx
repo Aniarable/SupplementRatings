@@ -3,10 +3,11 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Alert, Box, Button, Container, Link as MuiLink, Typography } from '@mui/material';
 import { useBanner } from '../context/BannerContext';
+import { buildAmazonHomeUrl, buildAmazonSearchUrl } from '../config';
 
-// Hard-coded affiliate links per user request
-const HOME_LINK = "https://www.amazon.com?&linkCode=ll2&tag=supplementrat-20&linkId=9312aba51e5cec1d6cd6f5a05c320db1&language=en_US&ref_=as_li_ss_tl";
-const CATEGORY_LINK_TEMPLATE = "https://www.amazon.com/s?k=Vitamin+A&crid=7KPFMQ19O8HC&sprefix=vitamin+a%2Caps%2C158&linkCode=ll2&tag=supplementrat-20&linkId=cee6c8a458a1e2d9152b76b6545824a8&language=en_US&ref_=as_li_ss_tl";
+// Affiliate links derived from the centralized tag in config.js
+const HOME_LINK = buildAmazonHomeUrl();
+const CATEGORY_LINK_TEMPLATE = buildAmazonSearchUrl('supplements');
 
 function buildCategoryLink(template, supplementName) {
     if (!template || !supplementName) return template || '';

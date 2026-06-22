@@ -20,8 +20,7 @@ import {
 import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { getSupplement, getAllSupplements } from '../services/api';
-
-const AMAZON_BASE = 'https://www.amazon.com/s?linkCode=ll2&tag=supplementrat-20&language=en_US&ref_=as_li_ss_tl&k=';
+import { buildAmazonSearchUrl } from '../config';
 
 function pct(count, total) {
     if (!total) return 0;
@@ -94,7 +93,7 @@ function SupplementColumn({ suppId, onClear }) {
         : null;
     const dosageUnit = ratings.find(r => r.dosage)?.dosage?.replace(/^[\d.]+/, '').trim() || '';
 
-    const amazonHref = AMAZON_BASE + encodeURIComponent(data.name);
+    const amazonHref = buildAmazonSearchUrl(data.name);
 
     return (
         <Box sx={{ flex: 1, minWidth: 0 }}>

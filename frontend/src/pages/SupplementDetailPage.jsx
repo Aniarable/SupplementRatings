@@ -38,6 +38,7 @@ import { toast } from 'react-toastify';
 import { useBanner } from '../context/BannerContext';
 import AmazonLink from '../components/AmazonLink';
 import ReviewTagChips from '../components/ReviewTagChips';
+import { buildAmazonSearchUrl } from '../config';
 import { DEFAULT_PROFILE_IMAGE_URL } from '../config';
 
 const defaultProfileImage = DEFAULT_PROFILE_IMAGE_URL;
@@ -586,7 +587,7 @@ function SupplementDetailPage() {
         );
     }
 
-    const amazonHref = `https://www.amazon.com/s?linkCode=ll2&tag=supplementrat-20&language=en_US&ref_=as_li_ss_tl&k=${encodeURIComponent(supplement.name)}`;
+    const amazonHref = buildAmazonSearchUrl(supplement.name);
 
     return (
         <Container maxWidth="lg" sx={{ py: 3 }}>

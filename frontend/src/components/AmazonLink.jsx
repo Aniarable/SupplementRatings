@@ -4,13 +4,12 @@
 import React from 'react';
 import { Box, Link, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-
-const BASE_URL = 'https://www.amazon.com/s?linkCode=ll2&tag=supplementrat-20&language=en_US&ref_=as_li_ss_tl&k=';
+import { buildAmazonSearchUrl } from '../config';
 
 export default function AmazonLink({ supplementName }) {
     if (!supplementName) return null;
 
-    const href = BASE_URL + encodeURIComponent(supplementName);
+    const href = buildAmazonSearchUrl(supplementName);
 
     return (
         <Link
