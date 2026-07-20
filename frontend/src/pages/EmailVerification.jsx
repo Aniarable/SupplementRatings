@@ -12,11 +12,17 @@ function EmailVerification() {
     useEffect(() => {
         const verify = async () => {
             try {
-                await verifyEmail(token);
-                toast.success('Email verified successfully! You can now login.');
+                const data = await verifyEmail(token);
+                toast.success(data?.message || 'Email verified successfully! You can now login.');
                 setTimeout(() => navigate('/login'), 2000);
             } catch (error) {
-                toast.error(error.response?.data?.error || 'Verification failed');
+                const msg = error.data?.error || error.message || 'Verification failed';
+                if (msg.toLowerCase().includes('already been used')) {
+                    toast.success('Your email is already verified. You can log in!');
+                    setTimeout(() => navigate('/login'), 2000);
+                } else {
+                    toast.error(msg);
+                }
             } finally {
                 setVerifying(false);
             }

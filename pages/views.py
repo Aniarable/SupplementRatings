@@ -1384,9 +1384,9 @@ def verify_email(request, token):
     except EmailVerificationToken.DoesNotExist:
         return Response(
             {
-                "error": "This verification link is invalid or has already been used. Please double-check the link or request a new one."
+                "message": "This link has already been used. If you verified your email, you can log in now."
             },
-            status=status.HTTP_400_BAD_REQUEST,
+            status=status.HTTP_200_OK,
         )
     except Exception as e:
         logger.error(f"Error in verify_email: {str(e)}", exc_info=True)
