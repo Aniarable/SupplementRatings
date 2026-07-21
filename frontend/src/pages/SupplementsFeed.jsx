@@ -781,6 +781,47 @@ function SupplementsFeed() {
                             </Box>
                         )}
 
+                        {/* Supplement info card when filtered */}
+                        {filterSupplement && !loading && (
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    mb: 1.5,
+                                    p: 2,
+                                    border: theme => `1px solid ${theme.palette.divider}`,
+                                    borderRadius: 2,
+                                    bgcolor: theme => theme.palette.mode === 'light' ? 'grey.50' : 'grey.900',
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
+                                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                                        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 0.5 }}>
+                                            {filterSupplement.name}
+                                        </Typography>
+                                        {filterSupplement.category && (
+                                            <Chip label={filterSupplement.category} size="small" variant="outlined" sx={{ mb: 1 }} />
+                                        )}
+                                        {filterSupplement.description && (
+                                            <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6, mb: 1 }}>
+                                                {filterSupplement.description.length > 200
+                                                    ? filterSupplement.description.substring(0, 200) + '...'
+                                                    : filterSupplement.description}
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                    <Button
+                                        component={RouterLink}
+                                        to={`/supplements/${filterSupplement.id}`}
+                                        variant="outlined"
+                                        size="small"
+                                        sx={{ flexShrink: 0, textTransform: 'none' }}
+                                    >
+                                        View Details
+                                    </Button>
+                                </Box>
+                            </Paper>
+                        )}
+
                         {/* Feed */}
                         {loading ? (
                             Array.from({ length: 5 }).map((_, i) => <FeedCardSkeleton key={i} />)

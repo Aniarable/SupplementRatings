@@ -15,7 +15,7 @@ import {
     InputAdornment
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+
 import SearchIcon from '@mui/icons-material/Search';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -133,14 +133,20 @@ const ManageRatings = () => {
             <List sx={{maxHeight: 400, overflow: 'auto', border: '1px solid #ddd', borderRadius: '4px'}}>
                 {ratings.map((rating) => (
                     <ListItem key={rating.id} divider>
-                        <ListItemText 
-                            primary={`Rating for: ${rating.supplement_name || rating.supplement} (Score: ${rating.score})`}
-                            secondary={`User: ${rating.user?.username || rating.user} | ID: ${rating.id} | Comment: ${rating.comment?.substring(0,50)}...`}
+                        <ListItemText
+                            primary={
+                                <Link to={`/reviews/${rating.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                    Rating for: {rating.supplement_name || rating.supplement} (Score: {rating.score})
+                                </Link>
+                            }
+                            secondary={
+                                <Link to={`/reviews/${rating.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                    User: {rating.user?.username || rating.user} | ID: {rating.id} | Comment: {rating.comment?.substring(0,50)}...
+                                </Link>
+                            }
+                            sx={{ cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' }, borderRadius: 1, px: 0.5 }}
                         />
                         <ListItemSecondaryAction>
-                            <IconButton edge="end" aria-label="view" component={Link} to={`/reviews/${rating.id}`} target="_blank" rel="noopener">
-                                <OpenInNewIcon fontSize="small" />
-                            </IconButton>
                             <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteClick(rating)} sx={{ ml: 0.5 }}>
                                 <DeleteIcon />
                             </IconButton>

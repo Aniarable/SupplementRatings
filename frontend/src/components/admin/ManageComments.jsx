@@ -15,7 +15,7 @@ import {
     InputAdornment
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+
 import SearchIcon from '@mui/icons-material/Search';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -126,24 +126,35 @@ const ManageComments = () => {
             {isLoading && <CircularProgress size={20} sx={{mb:1}}/>}
             {error && !isLoading && <Alert severity="warning" sx={{ mb: 2 }}>Could not load comments: {error}</Alert>}
             <List sx={{maxHeight: 400, overflow: 'auto', border: '1px solid #ddd', borderRadius: '4px'}}>
-                {comments.map((comment) => (
-                    <ListItem key={comment.id} divider>
-                        <ListItemText 
-                            primary={`Comment by: ${comment.user?.username || comment.user} (ID: ${comment.id})`}
-                            secondary={`${comment.content?.substring(0, 100)}...`}
-                        />
-                        <ListItemSecondaryAction>
-                            {(comment.rating_id || comment.rating) && (
-                                <IconButton edge="end" aria-label="view" component={Link} to={`/reviews/${comment.rating_id || comment.rating}`} target="_blank" rel="noopener">
-                                    <OpenInNewIcon fontSize="small" />
+                {comments.map((comment) => {
+                    const reviewLink = (comment.rating_id || comment.rating) ? `/reviews/${comment.rating_id || comment.rating}` : null;
+                    return (
+                        <ListItem key={comment.id} divider>
+                            <ListItemText
+                                primary={
+                                    reviewLink ? (
+                                        <Link to={reviewLink} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                            Comment by: {comment.user?.username || comment.user} (ID: {comment.id})
+                                        </Link>
+                                    ) : `Comment by: ${comment.user?.username || comment.user} (ID: ${comment.id})`
+                                }
+                                secondary={
+                                    reviewLink ? (
+                                        <Link to={reviewLink} style={{ textDecoration: 'none', color: 'inherit' }}>
+                                            {comment.content?.substring(0, 100)}...
+                                        </Link>
+                                    ) : `${comment.content?.substring(0, 100)}...`
+                                }
+                                sx={reviewLink ? { cursor: 'pointer', '&:hover': { bgcolor: 'action.hover' }, borderRadius: 1, px: 0.5 } : undefined}
+                            />
+                            <ListItemSecondaryAction>
+                                <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteClick(comment)} sx={{ ml: 0.5 }}>
+                                    <DeleteIcon />
                                 </IconButton>
-                            )}
-                            <IconButton edge="end" aria-label="delete" onClick={() => handleDeleteClick(comment)} sx={{ ml: 0.5 }}>
-                                <DeleteIcon />
-                            </IconButton>
-                        </ListItemSecondaryAction>
-                    </ListItem>
-                ))}
+                            </ListItemSecondaryAction>
+                        </ListItem>
+                    );
+                })}
             </List>
             {comments.length === 0 && !isLoading && (
                  <Typography sx={{textAlign: 'center', mt: 2}}>No comments found for the current search/filter.</Typography>
