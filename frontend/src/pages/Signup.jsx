@@ -15,8 +15,10 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { registerUser } from '../services/api';
 import { toast } from 'react-toastify';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 function Signup() {
+  usePageMeta({ title: 'Create Account | SupplementRatings', description: 'Join SupplementRatings for free. Share your supplement experiences, read real user reviews, and help others make informed health decisions.' });
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

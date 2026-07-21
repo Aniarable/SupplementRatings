@@ -2,8 +2,10 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 function NotFound() {
+  usePageMeta({ title: 'Page Not Found | SupplementRatings', description: 'The page you are looking for does not exist. Return to SupplementRatings to browse supplement reviews.' });
   return (
     <div style={styles.container}>
       <h2>404 - Page Not Found</h2>

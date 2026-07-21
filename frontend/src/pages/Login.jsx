@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { loginUser, loginWithGoogle, fetchGoogleClientId } from '../services/api';
+import { usePageMeta } from '../hooks/usePageMeta';
 import { toast } from 'react-toastify';
 import {
   Box,
@@ -19,6 +20,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 function Login() {
+  usePageMeta({ title: 'Log In | SupplementRatings', description: 'Sign in to your SupplementRatings account to share supplement reviews, vote, and track your health journey.' });
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

@@ -2,8 +2,20 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 function Home() {
+  usePageMeta({
+    title: 'SupplementRatings - Real Supplement Reviews from Real People',
+    description: 'Find honest, community-driven supplement reviews and ratings. Compare supplements, read real user experiences, and make informed health decisions.',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'SupplementRatings',
+      url: 'https://supplementratings.com',
+      description: 'Community-driven supplement reviews and ratings platform.',
+    },
+  });
   return (
     <div style={styles.container}>
       <h1>Welcome to SupplementRatings</h1>

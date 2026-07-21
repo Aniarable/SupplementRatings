@@ -9,8 +9,10 @@ import {
 } from '@mui/material';
 import { toast } from 'react-toastify';
 import { requestPasswordReset } from '../services/api';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 function ForgotPassword() {
+  usePageMeta({ title: 'Reset Password | SupplementRatings', description: 'Forgot your password? Enter your email to receive a password reset link for your SupplementRatings account.' });
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 

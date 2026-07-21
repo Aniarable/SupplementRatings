@@ -1,6 +1,7 @@
 import React from 'react';
 import { Container, Typography, Box, Paper } from '@mui/material';
 import { Link as MuiLink } from '@mui/material';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 const Section = ({ title, children }) => (
     <Box sx={{ mb: 4 }}>
@@ -12,6 +13,7 @@ const Section = ({ title, children }) => (
 );
 
 export default function PrivacyPage() {
+    usePageMeta({ title: 'Privacy Policy | SupplementRatings', description: 'Learn how SupplementRatings collects, uses, and protects your personal information. Your privacy matters to us.' });
     return (
         <Container maxWidth="md" sx={{ py: 6 }}>
             <Typography variant="h4" fontWeight={700} gutterBottom>

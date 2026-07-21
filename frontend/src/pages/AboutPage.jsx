@@ -2,8 +2,13 @@ import React from 'react';
 import { Container, Typography, Box, Divider, Paper } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { Link as MuiLink } from '@mui/material';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 export default function AboutPage() {
+    usePageMeta({
+        title: 'About SupplementRatings | Real User Supplement Reviews',
+        description: 'SupplementRatings is a community-driven platform for honest, unbiased supplement reviews. Learn about our mission and how we help people make informed health decisions.',
+    });
     return (
         <Container maxWidth="md" sx={{ py: 6 }}>
             <Typography variant="h4" fontWeight={700} gutterBottom>

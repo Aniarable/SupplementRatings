@@ -1,6 +1,7 @@
 import React from 'react';
 import { Container, Typography, Box, Paper } from '@mui/material';
 import { Link as MuiLink } from '@mui/material';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 const Section = ({ title, children }) => (
     <Box sx={{ mb: 4 }}>
@@ -12,6 +13,7 @@ const Section = ({ title, children }) => (
 );
 
 export default function TermsPage() {
+    usePageMeta({ title: 'Terms of Service | SupplementRatings', description: 'Read the SupplementRatings terms of service. Learn about user responsibilities, content guidelines, and site usage policies.' });
     return (
         <Container maxWidth="md" sx={{ py: 6 }}>
             <Typography variant="h4" fontWeight={700} gutterBottom>

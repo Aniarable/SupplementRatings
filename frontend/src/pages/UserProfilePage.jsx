@@ -14,9 +14,10 @@ import {
     Divider,
     Link
 } from '@mui/material';
-import { getUserPublicProfile } from '../services/api'; // We will create this API call
+import { getUserPublicProfile } from '../services/api';
 import { toast } from 'react-toastify';
 import { DEFAULT_PROFILE_IMAGE_URL } from '../config';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 const defaultProfileImage = DEFAULT_PROFILE_IMAGE_URL;
 
@@ -36,6 +37,19 @@ function UserProfilePage() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    usePageMeta({
+        title: `${username}'s Profile | SupplementRatings`,
+        description: `See ${username}'s supplement reviews and ratings on SupplementRatings.`,
+        jsonLd: profile ? {
+            '@context': 'https://schema.org',
+            '@type': 'ProfilePage',
+            mainEntity: {
+                '@type': 'Person',
+                name: username,
+            },
+        } : undefined,
+    });
 
     useEffect(() => {
         const fetchProfile = async () => {

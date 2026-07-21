@@ -12,11 +12,16 @@ class StaticSitemap(Sitemap):
         return [
             ("/", 1.0),
             ("/feed", 0.9),
-            ("/compare", 0.7),
+            ("/supplements", 0.9),
             ("/top-rated", 0.8),
+            ("/fix-me", 0.8),
+            ("/compare", 0.7),
             ("/about", 0.5),
-            ("/terms", 0.3),
-            ("/privacy", 0.3),
+            ("/contact", 0.4),
+            ("/signup", 0.3),
+            ("/login", 0.3),
+            ("/terms", 0.2),
+            ("/privacy", 0.2),
         ]
 
     def location(self, item):

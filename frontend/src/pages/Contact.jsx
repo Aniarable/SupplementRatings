@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Container, Box, Card, CardContent, Typography, TextField, Button, Stack, Link as MuiLink } from '@mui/material';
 import { toast } from 'react-hot-toast';
 import { sendContactMessage } from '../services/api';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 const SUPPORT_EMAIL = 'supplementratings.contact@gmail.com';
 
 function Contact() {
+	usePageMeta({ title: 'Contact Us | SupplementRatings', description: 'Get in touch with the SupplementRatings team. Send us feedback, report issues, or ask questions about supplements and reviews.' });
 	const [name, setName] = useState('');
 	const [email, setEmail] = useState('');
 	const [subject, setSubject] = useState('');
